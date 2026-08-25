@@ -1,7 +1,12 @@
 import type { MetadataRoute } from "next";
+import { connection } from "next/server";
 import { getLeaderboard } from "@/lib/repository";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Listings are database-backed and can change after a deployment. Generate the
+  // sitemap on request so the build does not need to connect to PostgreSQL.
+  await connection();
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
