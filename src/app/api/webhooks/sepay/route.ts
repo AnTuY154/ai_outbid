@@ -25,10 +25,14 @@ export async function POST(request: Request) {
     const orderCode = extractOrderCode(payload.code, payload.content);
     if (!orderCode) return NextResponse.json({ success: true, ignored: "missing_order_code" });
 
+    // SePay reports a virtual account (VA/TKP) in subAccount and the linked
+    // bank account in accountNumber. Prefer the VA when it is present because
+    // the QR code is generated from SEPAY_BANK_ACCOUNT.
+    const receivingAccount = payload.subAccount || payload.accountNumber;
     if (
       appConfig.bankAccount &&
-      payload.accountNumber &&
-      payload.accountNumber.replace(/\s/g, "") !== appConfig.bankAccount.replace(/\s/g, "")
+      receivingAccount &&
+      receivingAccount.replace(/\s/g, "") !== appConfig.bankAccount.replace(/\s/g, "")
     ) {
       return NextResponse.json({ success: true, ignored: "wrong_bank_account" });
     }

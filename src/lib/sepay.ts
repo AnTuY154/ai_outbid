@@ -12,6 +12,7 @@ export const sepayPayloadSchema = z
     gateway: z.string().optional().default(""),
     transactionDate: z.string().optional(),
     accountNumber: z.string().optional().default(""),
+    subAccount: z.string().optional().default(""),
     code: z.string().optional().nullable(),
     content: z.string().optional().default(""),
     transferType: z.string().optional().default("in"),
