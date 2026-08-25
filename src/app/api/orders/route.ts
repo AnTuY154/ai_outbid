@@ -14,7 +14,7 @@ const inputSchema = z.object({
 export async function POST(request: Request) {
   if (!isDatabaseConfigured()) {
     return NextResponse.json(
-      { error: "Chưa cấu hình DATABASE_URL. Form đang chạy ở chế độ demo." },
+      { error: "Chưa cấu hình DATABASE_URL. Không thể tạo đơn hàng khi chưa kết nối cơ sở dữ liệu." },
       { status: 503 },
     );
   }

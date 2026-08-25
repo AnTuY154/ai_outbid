@@ -2,8 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { listings, orders, payments, siteStats, visitors } from "@/db/schema";
-import { appConfig, isDatabaseConfigured } from "./config";
-import { demoLeaderboard, demoStats } from "./demo-data";
+import { appConfig } from "./config";
 import { buildSepayQrUrl } from "./sepay";
 import type { LeaderboardEntry, PublicOrder, PublicStats, SeoMetadata } from "./types";
 
@@ -54,7 +53,6 @@ function slugFor(metadata: SeoMetadata) {
 }
 
 export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
-  if (!isDatabaseConfigured()) return demoLeaderboard;
   const rows = await getDb()
     .select()
     .from(listings)
@@ -64,7 +62,6 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
 }
 
 export async function getListing(slug: string) {
-  if (!isDatabaseConfigured()) return demoLeaderboard.find((item) => item.slug === slug) ?? null;
   const [row] = await getDb()
     .select()
     .from(listings)
@@ -76,7 +73,6 @@ export async function getListing(slug: string) {
 }
 
 export async function getPublicStats(): Promise<PublicStats> {
-  if (!isDatabaseConfigured()) return demoStats;
   const [row] = await getDb().select().from(siteStats).where(eq(siteStats.id, 1)).limit(1);
   return row
     ? {
@@ -89,7 +85,6 @@ export async function getPublicStats(): Promise<PublicStats> {
 }
 
 export async function createOrder(metadata: SeoMetadata, amount: number): Promise<PublicOrder> {
-  if (!isDatabaseConfigured()) throw new Error("Chưa cấu hình PostgreSQL.");
   const orderCode = `${appConfig.paymentPrefix}${randomBytes(4).toString("hex").toUpperCase()}`;
   const expiresAt = new Date(Date.now() + appConfig.orderExpiryMinutes * 60_000);
   const [row] = await getDb()
@@ -106,7 +101,6 @@ export async function createOrder(metadata: SeoMetadata, amount: number): Promis
 }
 
 export async function getOrder(code: string): Promise<PublicOrder | null> {
-  if (!isDatabaseConfigured()) return null;
   const db = getDb();
   const [row] = await db.select().from(orders).where(eq(orders.orderCode, code)).limit(1);
   if (!row) return null;
@@ -132,7 +126,6 @@ type ProcessPaymentInput = {
 };
 
 export async function processPayment(input: ProcessPaymentInput) {
-  if (!isDatabaseConfigured()) throw new Error("Chưa cấu hình PostgreSQL.");
   return getDb().transaction(async (tx) => {
     const [order] = await tx
       .select()
@@ -213,10 +206,6 @@ export async function processPayment(input: ProcessPaymentInput) {
 }
 
 export async function incrementListingClick(slug: string) {
-  if (!isDatabaseConfigured()) {
-    const demo = demoLeaderboard.find((item) => item.slug === slug);
-    return demo?.canonicalUrl ?? null;
-  }
   return getDb().transaction(async (tx) => {
     const [listing] = await tx
       .update(listings)
@@ -243,7 +232,6 @@ export async function recordVisit(input: {
   referrer?: string;
   userAgentHash?: string;
 }) {
-  if (!isDatabaseConfigured()) return demoStats;
   const db = getDb();
   await db.transaction(async (tx) => {
     const inserted = await tx

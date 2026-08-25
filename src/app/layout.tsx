@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Kính Mắt — Ai trả cao, người đó đứng đầu",
   description: "Bảng xếp hạng công khai dành riêng cho các thương hiệu và sản phẩm kính mắt.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   openGraph: {
     title: "Kính Mắt Leaderboard",
     description: "Khám phá những website kính mắt đang dẫn đầu bảng xếp hạng.",

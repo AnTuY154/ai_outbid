@@ -19,7 +19,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Khi chưa có `DATABASE_URL`, trang chủ sử dụng dữ liệu demo. Các API tạo thanh toán chỉ hoạt động sau khi PostgreSQL được cấu hình.
+`DATABASE_URL` là bắt buộc. Ứng dụng chỉ đọc và ghi dữ liệu thật từ PostgreSQL; nếu thiếu biến này, API sẽ trả lỗi cấu hình thay vì hiển thị dữ liệu demo.
 
 ## Cấu hình PostgreSQL
 

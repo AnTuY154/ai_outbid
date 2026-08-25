@@ -1,7 +1,7 @@
 import "server-only";
 
 export const appConfig = {
-  appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   minimumBid: Number(process.env.MINIMUM_BID_AMOUNT ?? 50_000),
   orderExpiryMinutes: Number(process.env.ORDER_EXPIRY_MINUTES ?? 30),
   paymentPrefix: (process.env.SEPAY_PAYMENT_PREFIX ?? "KM").toUpperCase(),
