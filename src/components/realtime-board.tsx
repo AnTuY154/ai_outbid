@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
-import { ArrowUpRight, CircleDot, Glasses, MousePointerClick, Radio } from "lucide-react";
+import { CircleDot, Glasses, MousePointerClick, Radio } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import type { LeaderboardEntry, PublicStats } from "@/lib/types";
@@ -28,6 +28,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
   const [stats, setStats] = useState(initialStats);
   const [online, setOnline] = useState(1);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openListing = (slug: string) => window.open(`/go/${slug}`, "_blank", "noopener");
 
   const refreshPublicData = useCallback(() => {
     if (refreshTimer.current) clearTimeout(refreshTimer.current);
@@ -122,7 +123,19 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
         <div className="ranking-list">
           {leaderboard.map((item, index) => (
             <div className="ranking-fragment" key={item.id}>
-            <article className={`ranking-card rank-${item.rank}`} key={item.id}>
+            <article
+              className={`ranking-card rank-${item.rank}`}
+              role="link"
+              tabIndex={0}
+              aria-label={`Mở trang web ${item.title}`}
+              onClick={() => openListing(item.slug)}
+              onKeyDown={(event) => {
+                if (event.currentTarget === event.target && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  openListing(item.slug);
+                }
+              }}
+            >
               <div className="rank-number">#{item.rank}</div>
               <div className="listing-logo">
                 {item.imageUrl ? (
@@ -148,10 +161,9 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                 </div>
               </div>
               <div className="listing-bid">
-                <a href={`/go/${item.slug}`} target="_blank" rel="sponsored noopener">
-                  Mở <ArrowUpRight size={15} />
+                <a className="claim-rank" href="#tham-gia" onClick={(event) => event.stopPropagation()}>
+                  Vượt hạng với {formatMoney(item.totalPaid + 10_000)}
                 </a>
-                <a className="claim-rank" href="#tham-gia">Vượt hạng với {formatMoney(item.totalPaid + 10_000)}</a>
               </div>
             </article>
             {index === 2 && (

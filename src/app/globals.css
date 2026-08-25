@@ -317,7 +317,9 @@ button { cursor: pointer; }
   gap: 11px;
   padding: 14px 10px;
   border-bottom: 1px solid var(--line);
+  cursor: pointer;
 }
+.ranking-card:focus-visible { outline: 3px solid rgba(238,118,95,.45); outline-offset: 3px; }
 .ranking-card.rank-1,
 .ranking-card.rank-2,
 .ranking-card.rank-3 {
