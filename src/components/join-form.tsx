@@ -6,11 +6,28 @@ import { ArrowRight, Globe2, LoaderCircle, Minus, Plus, ShieldCheck } from "luci
 import { formatMoney } from "@/lib/format";
 import type { PublicOrder, SeoMetadata } from "@/lib/types";
 
-export function JoinForm({ minimumBid, suggestedBid }: { minimumBid: number; suggestedBid: number }) {
+function formatBidAmount(amount: number) {
+  return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(amount);
+}
+
+type Prefill = { url: string; targetAmount: number; revision: number } | null;
+
+export function JoinForm({
+  minimumBid,
+  suggestedBid,
+  prefill,
+}: {
+  minimumBid: number;
+  suggestedBid: number;
+  prefill: Prefill;
+}) {
   const router = useRouter();
-  const [url, setUrl] = useState("");
-  const [amount, setAmount] = useState(Math.max(minimumBid, suggestedBid));
+  const initialTarget = Math.max(minimumBid, prefill?.targetAmount ?? suggestedBid);
+  const [url, setUrl] = useState(prefill?.url ?? "");
+  const [amount, setAmount] = useState(initialTarget);
+  const [amountInput, setAmountInput] = useState(() => formatBidAmount(initialTarget));
   const [metadata, setMetadata] = useState<SeoMetadata | null>(null);
+  const [currentTotalPaid, setCurrentTotalPaid] = useState(0);
   const [loading, setLoading] = useState<"preview" | "order" | null>(null);
   const [error, setError] = useState("");
 
@@ -24,9 +41,10 @@ export function JoinForm({ minimumBid, suggestedBid }: { minimumBid: number; sug
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ url }),
       });
-      const data = (await response.json()) as { metadata?: SeoMetadata; error?: string };
+      const data = (await response.json()) as { metadata?: SeoMetadata; currentTotalPaid?: number; error?: string };
       if (!response.ok || !data.metadata) throw new Error(data.error ?? "Không thể đọc website.");
       setMetadata(data.metadata);
+      setCurrentTotalPaid(data.currentTotalPaid ?? 0);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Không thể đọc website.");
     } finally {
@@ -35,8 +53,26 @@ export function JoinForm({ minimumBid, suggestedBid }: { minimumBid: number; sug
   }
 
   function adjustAmount(delta: number) {
-    setAmount((current) => Math.max(minimumBid, current + delta));
+    setAmount((current) => {
+      const nextAmount = Math.max(minimumBid, current + delta);
+      setAmountInput(formatBidAmount(nextAmount));
+      return nextAmount;
+    });
   }
+
+  function changeAmount(value: string) {
+    const digits = value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+    if (!digits) {
+      setAmount(0);
+      setAmountInput("");
+      return;
+    }
+    const nextAmount = Math.min(Number(digits), 9_999_999_999);
+    setAmount(nextAmount);
+    setAmountInput(formatBidAmount(nextAmount));
+  }
+
+  const amountToPay = Math.max(0, amount - currentTotalPaid);
 
   async function createPayment() {
     if (!metadata) return;
@@ -60,28 +96,29 @@ export function JoinForm({ minimumBid, suggestedBid }: { minimumBid: number; sug
   return (
     <section className="bid-entry board-shell" id="tham-gia">
       <div className="claim-heading">
-        <h1>Chiếm vị trí <span>#1</span> với</h1>
+        <h1>Chiếm vị trí <span>#1</span></h1>
         <div className="amount-stepper">
           <button type="button" onClick={() => adjustAmount(-10_000)} aria-label="Giảm 10.000 đồng">
             <Minus size={16} />
           </button>
-          <label htmlFor="bid-amount" className="sr-only">Số tiền đặt hạng</label>
-          <span aria-hidden="true">₫</span>
+          <label htmlFor="bid-amount" className="sr-only">Tổng ngân sách mục tiêu</label>
           <input
             id="bid-amount"
-            type="number"
-            min={minimumBid}
-            step={10_000}
-            value={amount}
-            onChange={(event) => setAmount(Number(event.target.value))}
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            value={amountInput}
+            onChange={(event) => changeAmount(event.target.value)}
+            aria-describedby="bid-amount-help"
+            style={{ width: `${Math.max(6, amountInput.length + 1)}ch` }}
           />
           <button type="button" onClick={() => adjustAmount(10_000)} aria-label="Tăng 10.000 đồng">
             <Plus size={16} />
           </button>
         </div>
       </div>
-      <p className="claim-explainer">
-        Vị trí mới bắt đầu từ <strong>{formatMoney(minimumBid)}</strong>. Trả thấp hơn vị trí #1 vẫn giúp bạn vào bảng ở hạng tương ứng.
+      <p className="claim-explainer" id="bid-amount-help">
+        Nhập tổng ngân sách bạn muốn đạt. Vị trí mới bắt đầu từ <strong>{formatMoney(minimumBid)}</strong>; trả thấp hơn vị trí #1 vẫn giúp bạn vào bảng ở hạng tương ứng.
       </p>
 
       <div className="bid-form-wrap">
@@ -96,6 +133,7 @@ export function JoinForm({ minimumBid, suggestedBid }: { minimumBid: number; sug
               onChange={(event) => {
                 setUrl(event.target.value);
                 setMetadata(null);
+                setCurrentTotalPaid(0);
               }}
               placeholder="URL website hoặc sản phẩm kính mắt"
               autoComplete="url"
@@ -128,9 +166,9 @@ export function JoinForm({ minimumBid, suggestedBid }: { minimumBid: number; sug
               type="button"
               className="payment-button"
               onClick={createPayment}
-              disabled={loading !== null || amount < minimumBid}
+              disabled={loading !== null || amount < minimumBid || amountToPay <= 0}
             >
-              {loading === "order" ? <LoaderCircle className="spin" size={18} /> : <>Thanh toán {formatMoney(amount)} <ArrowRight size={17} /></>}
+              {loading === "order" ? <LoaderCircle className="spin" size={18} /> : <>Thanh toán thêm {formatMoney(amountToPay)} <ArrowRight size={17} /></>}
             </button>
           </div>
         )}

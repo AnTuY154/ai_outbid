@@ -1,13 +1,34 @@
 import { notFound } from "next/navigation";
 import { ArrowUpRight, MousePointerClick, Trophy } from "lucide-react";
+import type { Metadata } from "next";
+import { cache } from "react";
 import { formatMoney } from "@/lib/format";
 import { getListing } from "@/lib/repository";
 
 export const dynamic = "force-dynamic";
 
+const getListingCached = cache(getListing);
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const listing = await getListingCached(slug);
+  if (!listing) return { title: "Không tìm thấy nhà bán lẻ" };
+  const description = listing.description || `Thông tin website ${listing.title}, nhà bán lẻ kính đang xuất hiện trên OptiRise.`;
+  return {
+    title: listing.title,
+    description,
+    alternates: { canonical: `/kinh-mat/${listing.slug}` },
+    openGraph: {
+      title: `${listing.title} | OptiRise`,
+      description,
+      ...(listing.imageUrl ? { images: [{ url: listing.imageUrl, alt: listing.title }] } : {}),
+    },
+  };
+}
+
 export default async function ListingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const listing = await getListing(slug);
+  const listing = await getListingCached(slug);
   if (!listing) notFound();
 
   return (

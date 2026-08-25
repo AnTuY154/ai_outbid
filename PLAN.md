@@ -147,7 +147,7 @@ ORDER BY total_paid DESC, first_paid_at ASC
 - URL có tổng tiền cao hơn đứng trước.
 - Nếu bằng tiền, URL thanh toán lần đầu sớm hơn đứng trước.
 - Một URL có thể thanh toán nhiều lần.
-- Mỗi khoản thanh toán thành công được cộng vào `total_paid`.
+- Mỗi khoản thanh toán thành công được cộng vào `total_paid`. Khi website đã có trên bảng, số tiền trong form là **tổng mục tiêu**; đơn thanh toán chỉ thu phần chênh giữa tổng mục tiêu và `total_paid` hiện có.
 
 Client subscribe thay đổi `INSERT` và `UPDATE` trên bảng `listings`.
 
@@ -176,10 +176,10 @@ Supabase Realtime phát sự kiện cập nhật để số click thay đổi ng
 
 Biện pháp chống spam:
 
-- Dùng cookie `visitor_id` ẩn danh.
-- Một visitor chỉ được tính một click cho cùng listing trong khoảng thời gian ngắn.
-- Rate limit endpoint redirect.
-- Bỏ qua crawler và bot phổ biến.
+- Dùng cookie `km_click_visitor` ẩn danh, `HttpOnly`, có hiệu lực một năm.
+- PostgreSQL chỉ tính một click cho mỗi visitor và listing trong 10 giây, nguyên tử ngay cả khi chạy nhiều instance.
+- Rate limit endpoint redirect: tối đa 30 yêu cầu mỗi IP trong một phút; nếu hạ tầng không cung cấp IP qua proxy header, giới hạn theo visitor cookie.
+- Bỏ qua crawler và bot phổ biến theo `User-Agent` (vẫn redirect nhưng không cộng click).
 
 ### 4.6. Số người đang online
 

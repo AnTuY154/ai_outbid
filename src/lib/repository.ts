@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { listings, orders, payments, siteStats, visitors } from "@/db/schema";
+import { clickRateLimits, listings, listingClickGuards, orders, payments, siteStats, visitors } from "@/db/schema";
 import { appConfig } from "./config";
 import { buildSepayQrUrl } from "./sepay";
 import type { LeaderboardEntry, PublicOrder, PublicStats, SeoMetadata } from "./types";
@@ -84,19 +84,33 @@ export async function getPublicStats(): Promise<PublicStats> {
     : { totalVisitors: 0, totalPageviews: 0, totalOutboundClicks: 0, totalRevenue: 0 };
 }
 
-export async function createOrder(metadata: SeoMetadata, amount: number): Promise<PublicOrder> {
+export async function getListingTotalPaid(canonicalUrl: string) {
+  const [listing] = await getDb()
+    .select({ totalPaid: listings.totalPaid })
+    .from(listings)
+    .where(eq(listings.canonicalUrl, canonicalUrl))
+    .limit(1);
+  return listing?.totalPaid ?? 0;
+}
+
+// `targetTotal` is the desired total on the leaderboard. Returning listings
+// only pay the difference from their current accumulated amount.
+export async function createOrder(metadata: SeoMetadata, targetTotal: number): Promise<PublicOrder> {
   const orderCode = `${appConfig.paymentPrefix}${randomBytes(4).toString("hex").toUpperCase()}`;
   const expiresAt = new Date(Date.now() + appConfig.orderExpiryMinutes * 60_000);
-  const [row] = await getDb()
-    .insert(orders)
-    .values({
-      orderCode,
-      canonicalUrl: metadata.canonicalUrl,
-      expectedAmount: amount,
-      metadata,
-      expiresAt,
-    })
-    .returning();
+  const db = getDb();
+  const currentTotal = await getListingTotalPaid(metadata.canonicalUrl);
+  const amountToPay = targetTotal - currentTotal;
+  if (amountToPay <= 0) {
+    throw new Error("Mức đặt hạng phải cao hơn tổng tiền hiện tại của website.");
+  }
+  const [row] = await db.insert(orders).values({
+    orderCode,
+    canonicalUrl: metadata.canonicalUrl,
+    expectedAmount: amountToPay,
+    metadata,
+    expiresAt,
+  }).returning();
   return orderToPublic(row);
 }
 
@@ -205,14 +219,30 @@ export async function processPayment(input: ProcessPaymentInput) {
   });
 }
 
-export async function incrementListingClick(slug: string) {
+export async function registerListingClick(slug: string, visitorHash: string) {
   return getDb().transaction(async (tx) => {
     const [listing] = await tx
+      .select({ id: listings.id, url: listings.canonicalUrl })
+      .from(listings)
+      .where(and(eq(listings.slug, slug), eq(listings.status, "ACTIVE")));
+    if (!listing) return null;
+
+    const cooldown = await tx
+      .insert(listingClickGuards)
+      .values({ listingId: listing.id, visitorHash })
+      .onConflictDoUpdate({
+        target: [listingClickGuards.listingId, listingClickGuards.visitorHash],
+        set: { lastCountedAt: sql`now()` },
+        where: sql`${listingClickGuards.lastCountedAt} <= now() - interval '10 seconds'`,
+      })
+      .returning({ listingId: listingClickGuards.listingId });
+
+    if (cooldown.length === 0) return listing.url;
+
+    await tx
       .update(listings)
       .set({ clickCount: sql`${listings.clickCount} + 1`, updatedAt: new Date() })
-      .where(and(eq(listings.slug, slug), eq(listings.status, "ACTIVE")))
-      .returning({ url: listings.canonicalUrl });
-    if (!listing) return null;
+      .where(eq(listings.id, listing.id));
     await tx
       .insert(siteStats)
       .values({ id: 1, totalOutboundClicks: 1 })
@@ -225,6 +255,27 @@ export async function incrementListingClick(slug: string) {
       });
     return listing.url;
   });
+}
+
+export async function consumeClickRateLimit(clientHash: string, limit = 30) {
+  const result = await getDb().execute<{ clientHash: string }>(sql`
+    INSERT INTO ${clickRateLimits} (${clickRateLimits.clientHash}, ${clickRateLimits.windowStartedAt}, ${clickRateLimits.requestCount})
+    VALUES (${clientHash}, now(), 1)
+    ON CONFLICT (${clickRateLimits.clientHash}) DO UPDATE
+    SET
+      window_started_at = CASE
+        WHEN ${clickRateLimits.windowStartedAt} <= now() - interval '1 minute' THEN now()
+        ELSE ${clickRateLimits.windowStartedAt}
+      END,
+      request_count = CASE
+        WHEN ${clickRateLimits.windowStartedAt} <= now() - interval '1 minute' THEN 1
+        ELSE ${clickRateLimits.requestCount} + 1
+      END
+    WHERE ${clickRateLimits.windowStartedAt} <= now() - interval '1 minute'
+       OR ${clickRateLimits.requestCount} < ${limit}
+    RETURNING ${clickRateLimits.clientHash}
+  `);
+  return result.length > 0;
 }
 
 export async function recordVisit(input: {

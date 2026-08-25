@@ -1,9 +1,11 @@
 "use client";
 
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
-import { CircleDot, Glasses, MousePointerClick, Radio } from "lucide-react";
+import { CircleDot, CreditCard, Glasses, Link2, MousePointerClick, Trophy } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
+import { COOKIE_CONSENT_EVENT, getCookieConsent } from "@/lib/cookie-consent";
+import { getPresenceId } from "@/lib/presence";
 import type { LeaderboardEntry, PublicStats } from "@/lib/types";
 import { JoinForm } from "./join-form";
 
@@ -26,9 +28,23 @@ function getVisitorId() {
 export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: Props) {
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [stats, setStats] = useState(initialStats);
-  const [online, setOnline] = useState(1);
+  const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
+  const [prefill, setPrefill] = useState<{ url: string; targetAmount: number; revision: number } | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionVisitorId = useRef<string | null>(null);
   const openListing = (slug: string) => window.open(`/go/${slug}`, "_blank", "noopener");
+
+  function getSessionVisitorId() {
+    if (!sessionVisitorId.current) sessionVisitorId.current = crypto.randomUUID();
+    return sessionVisitorId.current;
+  }
+
+  useEffect(() => {
+    const syncConsent = () => setAnalyticsAllowed(getCookieConsent() === "accepted");
+    syncConsent();
+    window.addEventListener(COOKIE_CONSENT_EVENT, syncConsent);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, syncConsent);
+  }, []);
 
   const refreshPublicData = useCallback(() => {
     if (refreshTimer.current) clearTimeout(refreshTimer.current);
@@ -49,12 +65,14 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
   }, []);
 
   useEffect(() => {
-    const visitorId = getVisitorId();
-    void fetch("/api/analytics/visit", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ visitorId, referrer: document.referrer || undefined }),
-    }).then(() => refreshPublicData());
+    const visitorId = analyticsAllowed ? getVisitorId() : getSessionVisitorId();
+    if (analyticsAllowed) {
+      void fetch("/api/analytics/visit", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ visitorId, referrer: document.referrer || undefined }),
+      }).then(() => refreshPublicData());
+    }
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -68,11 +86,9 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
       .subscribe();
 
     const presenceChannel: RealtimeChannel = supabase.channel("site-presence", {
-      config: { presence: { key: visitorId } },
+      config: { presence: { key: getPresenceId() } },
     });
-    const syncPresence = () => setOnline(Object.keys(presenceChannel.presenceState()).length);
     presenceChannel
-      .on("presence", { event: "sync" }, syncPresence)
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await presenceChannel.track({ online_at: new Date().toISOString() });
@@ -95,28 +111,24 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
       void supabase.removeChannel(presenceChannel);
       void supabase.removeChannel(dataChannel);
     };
-  }, [refreshPublicData]);
+  }, [analyticsAllowed, refreshPublicData]);
 
   return (
     <main>
       <section className="board-intro board-shell">
-        <div className="intro-title"><Glasses size={30} /><h2>Kính Mắt</h2></div>
-        <a className="live-stats" href="#bang-xep-hang" aria-label="Thống kê trực tiếp">
-          <span><Radio size={13} className="pulse-dot" /><strong>{online.toLocaleString("vi-VN")}</strong> online</span>
-          <span>·</span>
-          <span><strong>{stats.totalVisitors.toLocaleString("vi-VN")}</strong> lượt truy cập</span>
-          <span>· xem bảng ↓</span>
-        </a>
+        <div className="intro-title"><Glasses size={30} /><h2>Nơi kính tốt được tìm thấy</h2></div>
+        <p className="intro-description">Khám phá các nhà bán lẻ kính trên toàn quốc — thêm lựa chọn, dễ so sánh và kết nối trực tiếp với nơi bạn muốn mua.</p>
       </section>
 
       <JoinForm
+        key={prefill?.revision ?? "default"}
         minimumBid={minimumBid}
         suggestedBid={Math.max(minimumBid, (leaderboard[0]?.totalPaid ?? 0) + 10_000)}
+        prefill={prefill}
       />
 
       <section className="ranking-section board-shell" id="bang-xep-hang">
         <div className="category-bar" aria-label="Danh mục xếp hạng">
-          <span className="category-chip active"><Glasses size={14} /> Kính Mắt</span>
           <span className="category-note"><CircleDot size={12} /> Một danh mục duy nhất · cập nhật realtime</span>
         </div>
 
@@ -161,7 +173,18 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                 </div>
               </div>
               <div className="listing-bid">
-                <a className="claim-rank" href="#tham-gia" onClick={(event) => event.stopPropagation()}>
+                <a
+                  className="claim-rank"
+                  href="#tham-gia"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setPrefill((current) => ({
+                      url: item.canonicalUrl,
+                      targetAmount: item.totalPaid + 10_000,
+                      revision: (current?.revision ?? 0) + 1,
+                    }));
+                  }}
+                >
                   Vượt hạng với {formatMoney(item.totalPaid + 10_000)}
                 </a>
               </div>
@@ -186,12 +209,21 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
 
       <section className="revenue-section board-shell">
         <p>Dự án Kính Mắt này đã ghi nhận</p>
-        <strong><span>₫</span>{stats.totalRevenue.toLocaleString("vi-VN")}</strong>
+        <strong>{stats.totalRevenue.toLocaleString("vi-VN")}<span>VNĐ</span></strong>
         <small>tổng ngân sách xếp hạng · công khai và cập nhật realtime</small>
-        <div className="mini-steps">
-          <div><b>01</b><span>Dán URL</span><p>Đọc tự động metadata SEO.</p></div>
-          <div><b>02</b><span>Thanh toán</span><p>Quét QR chuyển khoản SePay.</p></div>
-          <div><b>03</b><span>Lên hạng</span><p>Webhook cập nhật tức thì.</p></div>
+        <div className="mini-steps" aria-label="Cách tham gia bảng xếp hạng">
+          <article>
+            <div className="step-icon"><Link2 size={18} /></div>
+            <div><span>Dán URL website</span><p>Hệ thống tự đọc thông tin công khai của nhà bán lẻ.</p></div>
+          </article>
+          <article>
+            <div className="step-icon"><CreditCard size={18} /></div>
+            <div><span>Thanh toán</span><p>Quét QR SePay cho mức ngân sách bạn đã chọn.</p></div>
+          </article>
+          <article>
+            <div className="step-icon"><Trophy size={18} /></div>
+            <div><span>Xuất hiện trên bảng</span><p>Thứ hạng cập nhật ngay khi giao dịch được xác nhận.</p></div>
+          </article>
         </div>
       </section>
     </main>

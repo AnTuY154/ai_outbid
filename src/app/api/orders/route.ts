@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 const inputSchema = z.object({
   url: z.string().trim().min(3).max(2048),
-  amount: z.number().int().min(appConfig.minimumBid).max(999_999_999),
+  amount: z.number().int().min(appConfig.minimumBid).max(9_999_999_999),
 });
 
 export async function POST(request: Request) {

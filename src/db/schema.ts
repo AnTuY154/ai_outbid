@@ -3,6 +3,7 @@ import {
   date,
   index,
   integer,
+  primaryKey,
   jsonb,
   pgTable,
   smallint,
@@ -115,6 +116,28 @@ export const dailyStats = pgTable("daily_stats", {
   paidOrders: integer("paid_orders").default(0).notNull(),
   revenue: bigint("revenue", { mode: "number" }).default(0).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// One row per visitor/listing pair lets the database enforce the click cooldown
+// atomically, including when the app is deployed to more than one instance.
+export const listingClickGuards = pgTable(
+  "listing_click_guards",
+  {
+    listingId: uuid("listing_id")
+      .notNull()
+      .references(() => listings.id, { onDelete: "cascade" }),
+    visitorHash: text("visitor_hash").notNull(),
+    lastCountedAt: timestamp("last_counted_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.listingId, table.visitorHash] })],
+);
+
+// The IP address is hashed before it reaches this table. A single row is
+// reused for each client, keeping rate limiting shared across app instances.
+export const clickRateLimits = pgTable("click_rate_limits", {
+  clientHash: text("client_hash").primaryKey(),
+  windowStartedAt: timestamp("window_started_at", { withTimezone: true }).defaultNow().notNull(),
+  requestCount: integer("request_count").default(0).notNull(),
 });
 
 export type ListingRow = typeof listings.$inferSelect;

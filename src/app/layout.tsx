@@ -1,17 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Glasses } from "lucide-react";
+import { CookieConsentBanner } from "@/components/cookie-consent";
+import { HeaderLiveStats } from "@/components/header-live-stats";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kính Mắt — Ai trả cao, người đó đứng đầu",
-  description: "Bảng xếp hạng công khai dành riêng cho các thương hiệu và sản phẩm kính mắt.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
-  openGraph: {
-    title: "Kính Mắt Leaderboard",
-    description: "Khám phá những website kính mắt đang dẫn đầu bảng xếp hạng.",
-    type: "website",
+  title: {
+    default: "OptiRise | Cửa hàng kính mắt trên toàn quốc",
+    template: "%s | OptiRise",
   },
+  description: "Khám phá các cửa hàng kính mắt và nhà bán lẻ kính trên toàn quốc. So sánh lựa chọn và truy cập trực tiếp website chính thức của từng nhà bán.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "OptiRise | Cửa hàng kính mắt trên toàn quốc",
+    description: "Khám phá các nhà bán lẻ kính đang hoạt động trên toàn quốc.",
+    type: "website",
+    locale: "vi_VN",
+  },
+  twitter: { card: "summary_large_image" },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -20,25 +29,22 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <header className="site-header">
           <div className="board-shell header-inner">
-            <Link href="/" className="brand" aria-label="Kính Mắt - Trang chủ">
+            <Link href="/" className="brand" aria-label="OptiRise - Trang chủ">
               <span className="brand-mark" aria-hidden="true"><Glasses size={21} strokeWidth={2.6} /></span>
-              <span>kinhmat<span className="brand-dot">.rank</span></span>
+              <span>Opti<span className="brand-dot">Rise</span></span>
             </Link>
-            <div className="ranking-mode" aria-label="Chế độ xếp hạng">
-              <span className="ranking-mode-active">Toàn thời gian</span>
-              <span>Realtime</span>
-            </div>
+            <HeaderLiveStats />
             <nav aria-label="Điều hướng chính">
               <Link href="/#bang-xep-hang">Xếp hạng</Link>
               <Link href="/#tham-gia">Đặt hạng</Link>
-              <Link href="/quy-dinh">Quy định</Link>
+              <Link href="/ly-tuong" className="nav-ideal">Lý tưởng</Link>
             </nav>
           </div>
         </header>
         {children}
         <footer className="site-footer">
           <div className="board-shell footer-inner">
-            <p>kinhmat.rank · Bảng xếp hạng trả phí minh bạch</p>
+            <p>OptiRise · Khám phá nhà bán lẻ kính trên toàn quốc</p>
             <div>
               <Link href="/quy-dinh">Quy định</Link>
               <Link href="/dieu-khoan">Điều khoản</Link>
@@ -46,6 +52,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </div>
           </div>
         </footer>
+        <CookieConsentBanner />
       </body>
     </html>
   );
