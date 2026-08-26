@@ -155,13 +155,13 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
               className={`ranking-card rank-${item.rank}`}
             >
               <a
-                className="listing-link"
+                className={`listing-link${item.rank === 1 ? " rank-one-link" : ""}`}
                 href={`/go/${item.slug}`}
                 target="_blank"
                 rel="sponsored noopener"
                 aria-label={`Mở trang web ${item.title}`}
               >
-                <div className="rank-number">#{item.rank}</div>
+                {item.rank !== 1 && <div className="rank-number">#{item.rank}</div>}
                 <div className="listing-logo">
                   {item.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -176,7 +176,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                 <div className="listing-main">
                   <div className="listing-title-row">
                     <h3>{item.title}</h3>
-                    <strong className="listing-price">{formatMoney(item.totalPaid)}</strong>
+                    {item.rank !== 1 && <strong className="listing-price">{formatMoney(item.totalPaid)}</strong>}
                   </div>
                   <p>{item.description || "Chưa có mô tả."}</p>
                   <div className="listing-meta">
@@ -187,23 +187,47 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                   </div>
                 </div>
               </a>
-              <div className="listing-bid">
-                <a
-                  className="claim-rank"
-                  href="#tham-gia"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setPrefill((current) => ({
-                      url: item.canonicalUrl,
-                      targetAmount: item.totalPaid + 10_000,
-                      provinceSlug: item.province.slug,
-                      revision: (current?.revision ?? 0) + 1,
-                    }));
-                  }}
-                >
-                  Vượt hạng với {formatMoney(item.totalPaid + 10_000)}
-                </a>
-              </div>
+              {item.rank === 1 ? (
+                <div className="listing-bid rank-one-summary">
+                  <strong className="listing-price">{formatMoney(item.totalPaid)}</strong>
+                  <div className="rank-one-actions">
+                    <span className="rank-number">#1</span>
+                    <a
+                      className="claim-rank"
+                      href="#tham-gia"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPrefill((current) => ({
+                          url: item.canonicalUrl,
+                          targetAmount: item.totalPaid + 10_000,
+                          provinceSlug: item.province.slug,
+                          revision: (current?.revision ?? 0) + 1,
+                        }));
+                      }}
+                    >
+                      Vượt hạng
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="listing-bid">
+                  <a
+                    className="claim-rank"
+                    href="#tham-gia"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setPrefill((current) => ({
+                        url: item.canonicalUrl,
+                        targetAmount: item.totalPaid + 10_000,
+                        provinceSlug: item.province.slug,
+                        revision: (current?.revision ?? 0) + 1,
+                      }));
+                    }}
+                  >
+                    Vượt hạng với {formatMoney(item.totalPaid + 10_000)}
+                  </a>
+                </div>
+              )}
             </article>
             {index === 2 && (
               <aside className="activity-strip" aria-label="Hoạt động mới nhất">

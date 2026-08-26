@@ -44,12 +44,22 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {children}
         <footer className="site-footer">
           <div className="board-shell footer-inner">
-            <p>OptiRise · Khám phá nhà bán lẻ kính trên toàn quốc</p>
-            <div>
-              <Link href="/quy-dinh">Quy định</Link>
-              <Link href="/dieu-khoan">Điều khoản</Link>
-              <Link href="/chinh-sach-bao-mat">Riêng tư</Link>
+            <div className="footer-intro">
+              <strong>Opti<span>Rise</span></strong>
+              <p>Khám phá và so sánh các nhà bán lẻ kính trên toàn quốc.</p>
             </div>
+            <nav className="footer-nav" aria-label="Thông tin pháp lý">
+              <span>Thông tin</span>
+              <div>
+                <Link href="/quy-dinh">Quy định</Link>
+                <Link href="/dieu-khoan">Điều khoản</Link>
+                <Link href="/chinh-sach-bao-mat">Chính sách riêng tư</Link>
+              </div>
+            </nav>
+          </div>
+          <div className="board-shell footer-bottom">
+            <span>© 2026 OptiRise</span>
+            <Link href="/#tham-gia">Đặt hạng cửa hàng</Link>
           </div>
         </footer>
         <CookieConsentBanner />

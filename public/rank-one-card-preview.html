@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preview card hạng nhất</title>
+    <style>
+      :root { --ink: #173f34; --gold: #b88313; --gold-soft: #fff6d7; --line: #eadfbf; --muted: #78756e; }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 32px; color: #282725; background: #f8f6f0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      main { width: min(880px, 100%); }
+      .eyebrow { margin: 0 0 10px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: .1em; }
+      h1 { margin: 0 0 22px; color: var(--ink); font-size: clamp(25px, 4vw, 40px); letter-spacing: -.045em; }
+      .rank-card {
+        min-height: 108px;
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 16px;
+        border: 2px solid #d9aa35;
+        border-radius: 16px;
+        background: linear-gradient(105deg, #fff9e2, #fffefa 65%);
+        box-shadow: 0 8px 20px rgba(159,109,13,.12);
+      }
+      .logo { width: 76px; height: 76px; display: grid; place-items: center; overflow: hidden; border: 2px solid #e4c268; border-radius: 16px; color: #fff; background: linear-gradient(145deg, #173f34, #2d6959); font-size: 28px; font-weight: 900; letter-spacing: -.1em; }
+      .store { min-width: 0; }
+      .store h2 { overflow: hidden; margin: 0 0 6px; color: var(--ink); font-size: 17px; letter-spacing: -.03em; text-overflow: ellipsis; white-space: nowrap; }
+      .store p { overflow: hidden; margin: 0 0 8px; color: var(--muted); font-size: 11px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+      .meta { display: flex; flex-wrap: wrap; gap: 5px 12px; color: #777166; font-size: 10px; }
+      .meta span + span::before { margin-right: 12px; color: #c69521; content: "•"; }
+      .right { min-width: 182px; height: 76px; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; }
+      .price { color: #8c5d06; font-size: 17px; font-weight: 850; letter-spacing: -.035em; white-space: nowrap; }
+      .rank { min-width: 37px; height: 31px; display: grid; place-items: center; border-radius: 10px; color: #674400; background: linear-gradient(135deg, #fff3aa, #d3991e); box-shadow: 0 4px 10px rgba(159,109,13,.17); font-size: 13px; font-weight: 850; }
+      .bottom { display: flex; align-items: center; gap: 8px; }
+      .outbid { height: 31px; padding: 0 11px; border: 1px solid #d8a52e; border-radius: 9px; color: #704b00; background: #fff7d2; font: inherit; font-size: 10px; font-weight: 800; cursor: pointer; }
+      .outbid:hover { color: #fff; background: #9a6703; }
+      .note { margin: 14px 0 0; color: #807b71; font-size: 12px; line-height: 1.5; }
+      @media (max-width: 600px) {
+        body { padding: 18px; }
+        .rank-card { grid-template-columns: 64px minmax(0, 1fr); gap: 11px; padding: 12px; }
+        .logo { width: 64px; height: 64px; border-radius: 14px; font-size: 24px; }
+        .right { grid-column: 1 / -1; width: 100%; height: auto; flex-direction: row; align-items: center; }
+        .price { font-size: 15px; }
+        .store h2 { font-size: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">PREVIEW · CARD HẠNG NHẤT</p>
+      <h1>Logo lớn, thông tin xếp hạng rõ ràng</h1>
+      <article class="rank-card">
+        <div class="logo" aria-label="Logo Kính Mắt Việt">KM</div>
+        <div class="store">
+          <h2>Kính Mắt Việt</h2>
+          <p>Gọng kính và kính râm được tuyển chọn cho phong cách hằng ngày.</p>
+          <div class="meta"><span>kinhmatviet.vn</span><span>Hà Nội</span><span>1.248 click</span></div>
+        </div>
+        <div class="right">
+          <strong class="price">2.500.000 ₫</strong>
+          <div class="bottom">
+            <span class="rank">#1</span>
+            <button class="outbid" type="button" onclick="alert('Khi áp dụng vào app, nút này sẽ điền URL và cuộn tới form Đặt hạng.')">Vượt hạng</button>
+          </div>
+        </div>
+      </article>
+      <p class="note">Chiều cao giữ ở mức card hiện tại; logo 76px, giá ở góc phải trên và hạng ở góc phải dưới.</p>
+    </main>
+  </body>
+</html>

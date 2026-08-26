@@ -436,6 +436,13 @@ button { cursor: pointer; }
 .rank-1 .listing-price { color: #8c5d06; }
 .rank-1 .listing-meta span + span::before { color: #c69521; }
 .rank-1 .claim-rank { border-color: #d8a52e; color: #704b00; background: #fff7d2; }
+.rank-one-link { grid-template-columns: 76px minmax(0, 1fr); gap: 15px; }
+.rank-1 .listing-logo { width: 76px; height: 76px; border-width: 2px; border-radius: 16px; }
+.rank-one-summary { min-width: 170px; height: 76px; justify-content: space-between; }
+.rank-one-summary .listing-price { color: #8c5d06; font-size: 17px; letter-spacing: -.035em; }
+.rank-one-actions { display: flex; align-items: center; gap: 8px; }
+.rank-one-actions .rank-number { width: 37px; height: 31px; display: grid; place-items: center; border-radius: 10px; color: #674400; background: linear-gradient(135deg, #fff3aa, #d3991e); box-shadow: 0 4px 10px rgba(159,109,13,.17); font-size: 13px; font-weight: 850; }
+.rank-one-actions .claim-rank { padding: 7px 10px; border-color: #d8a52e; border-radius: 9px; color: #704b00; background: #fff7d2; }
 
 .ranking-card.rank-2 {
   border: 1px solid #c8d7db;
@@ -543,10 +550,18 @@ button { cursor: pointer; }
 .mini-steps span { display: block; padding-top: 1px; font-size: 12px; font-weight: 800; }
 .mini-steps p { margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
 
-.site-footer { border-top: 1px solid var(--line); }
-.footer-inner { min-height: 92px; display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 10px; }
-.footer-inner div { display: flex; gap: 17px; }
-.footer-inner a:hover { color: var(--accent); }
+.site-footer { border-top: 1px solid var(--line); background: #fcfbf8; }
+.footer-inner { min-height: 126px; padding: 26px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 34px; }
+.footer-intro strong { display: block; color: var(--ink); font-size: 18px; letter-spacing: -.055em; }
+.footer-intro strong span { color: var(--accent); }
+.footer-intro p { max-width: 340px; margin: 6px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.footer-nav { text-align: right; }
+.footer-nav > span { display: block; margin-bottom: 8px; color: #928e87; font-size: 9px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.footer-nav > div { display: flex; justify-content: flex-end; gap: 17px; }
+.footer-nav a { color: #57544f; font-size: 11px; font-weight: 700; }
+.footer-nav a:hover, .footer-bottom a:hover { color: var(--accent); }
+.footer-bottom { min-height: 43px; padding: 12px 0; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); color: #928e87; font-size: 10px; }
+.footer-bottom a { color: var(--accent-dark); font-weight: 750; }
 .cookie-banner {
   position: fixed;
   z-index: 20;
@@ -721,11 +736,21 @@ button { cursor: pointer; }
     padding: 13px 8px;
   }
   .listing-link { grid-column: 1 / -1; grid-template-columns: 38px 46px minmax(0, 1fr); gap: 9px; }
+  .ranking-card.rank-1 { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 13px; }
+  .rank-one-link { grid-column: auto; grid-template-columns: 64px minmax(0, 1fr); gap: 11px; }
+  .rank-1 .listing-logo { width: 64px; height: 64px; border-radius: 14px; }
+  .rank-one-summary { grid-column: auto; min-width: 126px; height: 64px; }
+  .rank-one-summary .listing-price { font-size: 14px; }
+  .rank-one-actions { gap: 6px; }
+  .rank-one-actions .rank-number { width: 31px; height: 27px; border-radius: 8px; font-size: 11px; }
+  .listing-bid .rank-one-actions .claim-rank { display: inline-flex; padding: 6px 8px; font-size: 9px; }
   .listing-logo { width: 44px; height: 44px; }
   .listing-title-row h3 { font-size: 12px; }
   .listing-main > p { display: -webkit-box; white-space: normal; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .listing-meta span:nth-child(2) { display: none; }
   .listing-bid { grid-column: 2 / -1; align-items: center; flex-direction: row; justify-content: space-between; }
+  .rank-one-summary { grid-column: auto; align-items: flex-end; flex-direction: column; justify-content: space-between; }
+  .rank-1 .listing-logo { width: 64px; height: 64px; border-radius: 14px; }
   .activity-strip > div { grid-template-columns: 1fr; gap: 9px; }
   .mini-steps { grid-template-columns: 1fr; }
   .mini-steps > div + div { border-top: 1px solid var(--line); border-left: 0; }
@@ -755,6 +780,15 @@ button { cursor: pointer; }
   .listing-price { font-size: 10px; }
   .listing-meta { gap: 5px; }
   .listing-bid > a:first-child { display: none; }
+  .ranking-card.rank-1 { grid-template-columns: minmax(0, 1fr) auto; }
+  .rank-one-link { grid-template-columns: 58px minmax(0, 1fr); gap: 9px; }
+  .rank-1 .listing-logo { width: 58px; height: 58px; border-radius: 13px; }
+  .rank-one-summary { grid-column: auto; min-width: 118px; height: 58px; align-items: flex-end; flex-direction: column; justify-content: space-between; }
+  .rank-one-summary .listing-price { font-size: 12px; }
+  .listing-bid .rank-one-actions .claim-rank { display: inline-flex; }
   .claim-rank { margin-left: auto; }
-  .footer-inner { padding-block: 23px; align-items: flex-start; flex-direction: column; justify-content: center; gap: 13px; }
+  .footer-inner { min-height: 0; padding-block: 23px; grid-template-columns: 1fr; align-items: flex-start; gap: 20px; }
+  .footer-nav { text-align: left; }
+  .footer-nav > div { justify-content: flex-start; flex-wrap: wrap; gap: 10px 17px; }
+  .footer-bottom { padding-block: 14px; }
 }
