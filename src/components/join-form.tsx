@@ -1,16 +1,21 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Globe2, LoaderCircle, Minus, Plus, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Globe2, LoaderCircle, MapPin, Minus, Plus, Search, ShieldCheck } from "lucide-react";
 import { formatMoney } from "@/lib/format";
+import { provinces } from "@/lib/vn-provinces";
 import type { PublicOrder, SeoMetadata } from "@/lib/types";
 
 function formatBidAmount(amount: number) {
   return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(amount);
 }
 
-type Prefill = { url: string; targetAmount: number; revision: number } | null;
+function normalizeSearch(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLowerCase();
+}
+
+type Prefill = { url: string; targetAmount: number; provinceSlug?: string; revision: number } | null;
 
 export function JoinForm({
   minimumBid,
@@ -24,12 +29,39 @@ export function JoinForm({
   const router = useRouter();
   const initialTarget = Math.max(minimumBid, prefill?.targetAmount ?? suggestedBid);
   const [url, setUrl] = useState(prefill?.url ?? "");
+  const [provinceSlug, setProvinceSlug] = useState(prefill?.provinceSlug ?? "");
+  const [provincePickerOpen, setProvincePickerOpen] = useState(false);
+  const [provinceSearch, setProvinceSearch] = useState("");
   const [amount, setAmount] = useState(initialTarget);
   const [amountInput, setAmountInput] = useState(() => formatBidAmount(initialTarget));
   const [metadata, setMetadata] = useState<SeoMetadata | null>(null);
   const [currentTotalPaid, setCurrentTotalPaid] = useState(0);
   const [loading, setLoading] = useState<"preview" | "order" | null>(null);
   const [error, setError] = useState("");
+  const provincePickerRef = useRef<HTMLDivElement>(null);
+  const provinceSearchRef = useRef<HTMLInputElement>(null);
+  const selectedProvince = provinces.find((province) => province.slug === provinceSlug);
+  const filteredProvinces = provinces.filter((province) => normalizeSearch(province.name).includes(normalizeSearch(provinceSearch)));
+
+  useEffect(() => {
+    if (!provincePickerOpen) return;
+    provinceSearchRef.current?.focus();
+  }, [provincePickerOpen]);
+
+  useEffect(() => {
+    function closePicker(event: PointerEvent) {
+      if (!provincePickerRef.current?.contains(event.target as Node)) setProvincePickerOpen(false);
+    }
+    function closeWithEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setProvincePickerOpen(false);
+    }
+    document.addEventListener("pointerdown", closePicker);
+    document.addEventListener("keydown", closeWithEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closePicker);
+      document.removeEventListener("keydown", closeWithEscape);
+    };
+  }, []);
 
   async function preview(event: FormEvent) {
     event.preventDefault();
@@ -75,14 +107,14 @@ export function JoinForm({
   const amountToPay = Math.max(0, amount - currentTotalPaid);
 
   async function createPayment() {
-    if (!metadata) return;
+    if (!metadata || !provinceSlug) return;
     setError("");
     setLoading("order");
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url: metadata.canonicalUrl, amount }),
+        body: JSON.stringify({ url: metadata.canonicalUrl, amount, provinceSlug }),
       });
       const data = (await response.json()) as { order?: PublicOrder; error?: string };
       if (!response.ok || !data.order) throw new Error(data.error ?? "Không thể tạo thanh toán.");
@@ -140,11 +172,61 @@ export function JoinForm({
               required
             />
           </div>
-          <button type="submit" className="outbid-button" disabled={loading !== null || !url.trim()}>
+          <div className="province-picker" ref={provincePickerRef}>
+            <button
+              type="button"
+              className="province-picker-trigger"
+              aria-haspopup="listbox"
+              aria-expanded={provincePickerOpen}
+              aria-controls="province-options"
+              aria-describedby="province-help"
+              onClick={() => setProvincePickerOpen((open) => !open)}
+            >
+              <MapPin size={17} aria-hidden="true" />
+              <span className={selectedProvince ? undefined : "province-placeholder"}>{selectedProvince?.name ?? "Chọn tỉnh/thành"}</span>
+              <ChevronDown className={provincePickerOpen ? "province-chevron-open" : undefined} size={16} aria-hidden="true" />
+            </button>
+            {provincePickerOpen && (
+              <div className="province-popover">
+                <div className="province-search">
+                  <Search size={15} aria-hidden="true" />
+                  <label htmlFor="province-search" className="sr-only">Tìm tỉnh hoặc thành phố</label>
+                  <input
+                    id="province-search"
+                    ref={provinceSearchRef}
+                    value={provinceSearch}
+                    onChange={(event) => setProvinceSearch(event.target.value)}
+                    placeholder="Tìm tỉnh/thành..."
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="province-options" id="province-options" role="listbox" aria-label="Tỉnh hoặc thành phố">
+                  {filteredProvinces.length ? filteredProvinces.map((province) => (
+                    <button
+                      key={province.slug}
+                      type="button"
+                      role="option"
+                      aria-selected={province.slug === provinceSlug}
+                      className={province.slug === provinceSlug ? "province-option-selected" : undefined}
+                      onClick={() => {
+                        setProvinceSlug(province.slug);
+                        setProvinceSearch("");
+                        setProvincePickerOpen(false);
+                      }}
+                    >
+                      <span>{province.name}</span>
+                      {province.slug === provinceSlug && <Check size={15} aria-hidden="true" />}
+                    </button>
+                  )) : <p className="province-empty">Không tìm thấy tỉnh/thành phù hợp.</p>}
+                </div>
+              </div>
+            )}
+          </div>
+          <button type="submit" className="outbid-button" disabled={loading !== null || !url.trim() || !provinceSlug}>
             {loading === "preview" ? <LoaderCircle className="spin" size={18} /> : "Đặt hạng"}
           </button>
         </form>
-        <p className="returning-note">Đã có trên bảng? Nhập lại đúng URL để cộng thêm ngân sách và tăng hạng.</p>
+        <p className="returning-note" id="province-help">Chọn tỉnh/thành phố nơi cửa hàng hoạt động. Đã có trên bảng? Nhập lại đúng URL để cộng thêm ngân sách và tăng hạng.</p>
 
         {metadata && (
           <div className="seo-preview">
@@ -166,7 +248,7 @@ export function JoinForm({
               type="button"
               className="payment-button"
               onClick={createPayment}
-              disabled={loading !== null || amount < minimumBid || amountToPay <= 0}
+              disabled={loading !== null || amount < minimumBid || amountToPay <= 0 || !provinceSlug}
             >
               {loading === "order" ? <LoaderCircle className="spin" size={18} /> : <>Thanh toán thêm {formatMoney(amountToPay)} <ArrowRight size={17} /></>}
             </button>

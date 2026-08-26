@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const input = inputSchema.parse(await request.json());
     const metadata = await extractSeoMetadata(input.url);
     const currentTotalPaid = isDatabaseConfigured()
-      ? await getListingTotalPaid(metadata.canonicalUrl)
+      ? await getListingTotalPaid(metadata.domain)
       : 0;
     return NextResponse.json({ metadata, currentTotalPaid });
   } catch (error) {

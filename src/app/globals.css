@@ -188,7 +188,7 @@ button { cursor: pointer; }
 }
 .claim-explainer strong { color: var(--accent); }
 .bid-form-wrap { max-width: 880px; margin: auto; }
-.bid-form { display: grid; grid-template-columns: 1fr auto; gap: 9px; }
+.bid-form { display: grid; grid-template-columns: minmax(0, 1fr) 218px auto; gap: 9px; }
 .bid-url-field {
   height: 48px;
   padding: 0 15px;
@@ -326,6 +326,73 @@ button { cursor: pointer; }
   padding: 14px 10px;
   border-bottom: 1px solid var(--line);
 }
+.province-picker { position: relative; min-width: 0; }
+.province-picker-trigger {
+  width: 100%;
+  height: 48px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d8d4cd;
+  border-radius: 999px;
+  color: #55514b;
+  background: white;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+.province-picker-trigger:focus-visible,
+.province-picker-trigger[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(238,118,95,.09); outline: 0; }
+.province-picker-trigger > span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.province-placeholder { color: #98958e; }
+.province-picker-trigger > svg:first-child { color: var(--accent); }
+.province-picker-trigger > svg:last-child { color: #98958e; transition: transform .16s ease; }
+.province-picker-trigger > .province-chevron-open { transform: rotate(180deg); }
+.province-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(340px, calc(100vw - 32px));
+  padding: 8px;
+  border: 1px solid #e2ddd6;
+  border-radius: 17px;
+  background: #fffdfa;
+  box-shadow: 0 18px 45px rgba(50, 42, 33, .16), 0 2px 8px rgba(50, 42, 33, .06);
+}
+.province-search {
+  height: 39px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #eee8e1;
+  color: var(--accent);
+}
+.province-search input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: #383633; font: inherit; font-size: 12px; }
+.province-options { max-height: 248px; padding: 5px 0 1px; overflow-y: auto; scrollbar-width: thin; }
+.province-options button {
+  width: 100%;
+  min-height: 35px;
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-radius: 9px;
+  color: #55514b;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.province-options button:hover, .province-options button:focus-visible { color: #9f3d2f; background: #fff0eb; outline: 0; }
+.province-options .province-option-selected { color: #9f3d2f; background: #ffe8e0; font-weight: 750; }
+.province-empty { margin: 13px 9px; color: #8e8b85; font-size: 12px; }
 .listing-link {
   min-width: 0;
   display: grid;
@@ -339,72 +406,51 @@ button { cursor: pointer; }
 .ranking-card.rank-1,
 .ranking-card.rank-2,
 .ranking-card.rank-3 {
-  min-height: 116px;
+  min-height: 108px;
   margin-top: 10px;
   padding: 14px;
-  border-radius: 18px;
+  border-radius: 16px;
 }
 .rank-number { color: #595752; font-size: 13px; font-weight: 750; text-align: center; }
 .rank-1 .rank-number,
 .rank-2 .rank-number,
 .rank-3 .rank-number {
-  width: 36px;
-  height: 36px;
   display: grid;
   place-items: center;
-  border-radius: 11px;
-  color: white;
+  font-weight: 850;
 }
 .ranking-card.rank-1 {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid #d89b20;
-  background: radial-gradient(circle at 8% 10%, rgba(255,239,160,.9), transparent 23%), linear-gradient(115deg, #55370b, #a46b10 58%, #e1ad36);
-  box-shadow: 0 12px 28px rgba(130,84,9,.25);
+  border: 2px solid #d9aa35;
+  background: linear-gradient(105deg, #fff9e2, #fffefa 60%);
+  box-shadow: 0 8px 20px rgba(159,109,13,.12);
 }
-.rank-1::after {
-  content: "DẪN ĐẦU";
-  position: absolute;
-  top: 0;
-  right: 18px;
-  padding: 4px 10px;
-  border-radius: 0 0 9px 9px;
-  color: #644000;
-  background: #ffe692;
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: .11em;
-}
-.rank-1 .listing-link { color: white; }
-.rank-1 .rank-number { color: #704600; background: linear-gradient(135deg, #fff7b2, #d99b1c); box-shadow: inset 0 0 0 1px rgba(255,255,255,.55); }
-.rank-1 .listing-logo { border-color: rgba(255,246,195,.7); box-shadow: 0 5px 12px rgba(57,35,0,.2); }
-.rank-1 .listing-price { color: #fff2a8; }
-.rank-1 .listing-main > p,
-.rank-1 .listing-meta { color: rgba(255,255,255,.76); }
-.rank-1 .listing-meta span + span::before { color: #ffe692; }
-.rank-1 .claim-rank { border-color: #f2c958; color: #684200; background: #fff4bd; }
+.rank-1 .rank-number { width: 40px; height: 40px; border-radius: 12px; color: #674400; background: linear-gradient(135deg, #fff3aa, #d3991e); box-shadow: 0 4px 10px rgba(159,109,13,.17); }
+.rank-1 .listing-logo { border-color: #e4c268; }
+.rank-1 .listing-price { color: #8c5d06; }
+.rank-1 .listing-meta span + span::before { color: #c69521; }
+.rank-1 .claim-rank { border-color: #d8a52e; color: #704b00; background: #fff7d2; }
 
 .ranking-card.rank-2 {
-  border: 1px solid #b8c8d4;
-  background: linear-gradient(125deg, #f8fbfc, #dde7eb 52%, #b4c3ca);
-  box-shadow: 0 8px 20px rgba(82,111,124,.14);
+  border: 1px solid #c8d7db;
+  background: linear-gradient(105deg, #f5fafb, #fffefa 48%);
+  box-shadow: 0 5px 13px rgba(82,111,124,.07);
 }
-.rank-2 .rank-number { color: #344951; background: linear-gradient(135deg, #faffff, #94aab3); box-shadow: inset 0 0 0 1px rgba(255,255,255,.9); }
-.rank-2 .listing-logo { border-color: rgba(104,132,143,.34); }
+.rank-2 .rank-number { width: 36px; height: 36px; border-radius: 11px; color: #53666f; background: #e2edef; }
+.rank-2 .listing-logo { border-color: #c8d7db; }
 .rank-2 .listing-price { color: #48636e; }
 .rank-2 .listing-meta span + span::before { color: #78949f; }
-.rank-2 .claim-rank { border-color: #aabcc4; color: #405862; background: rgba(255,255,255,.78); }
+.rank-2 .claim-rank { border-color: #c8d7db; color: #405862; background: #f6fbfc; }
 
 .ranking-card.rank-3 {
-  border: 1px solid #c98852;
-  background: linear-gradient(125deg, #fff8ee, #f2d2b1 54%, #ca8755);
-  box-shadow: 0 8px 20px rgba(130,71,32,.15);
+  border: 1px solid #f0ddd2;
+  background: linear-gradient(105deg, #fffaf7, #fffefa 35%);
+  box-shadow: 0 3px 9px rgba(130,71,32,.04);
 }
-.rank-3 .rank-number { color: #6b351a; background: linear-gradient(135deg, #ffe1b2, #ae5f32); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65); }
-.rank-3 .listing-logo { border-color: rgba(153,78,37,.33); }
+.rank-3 .rank-number { width: 32px; height: 32px; border-radius: 10px; color: #9c654c; background: #fdf0e8; }
+.rank-3 .listing-logo { border-color: #f0ddd2; }
 .rank-3 .listing-price { color: #9a4b26; }
 .rank-3 .listing-meta span + span::before { color: #b56034; }
-.rank-3 .claim-rank { border-color: #d39a70; color: #803d20; background: rgba(255,250,244,.85); }
+.rank-3 .claim-rank { border-color: #f0ddd2; color: #803d20; background: #fffaf7; }
 .listing-logo {
   width: 48px;
   height: 48px;
@@ -639,6 +685,8 @@ button { cursor: pointer; }
   .claim-heading h1 { font-size: 34px; }
   .amount-stepper input { font-size: 38px; }
   .bid-form { grid-template-columns: 1fr; }
+  .province-picker-trigger { height: 46px; }
+  .province-popover { width: 100%; }
   .outbid-button { height: 46px; }
   .seo-preview { grid-template-columns: 45px 1fr; }
   .payment-button { grid-column: 1 / -1; width: 100%; }

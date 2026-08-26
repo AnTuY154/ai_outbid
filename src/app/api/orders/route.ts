@@ -3,12 +3,14 @@ import { z } from "zod";
 import { appConfig, isDatabaseConfigured } from "@/lib/config";
 import { extractSeoMetadata } from "@/lib/metadata";
 import { createOrder } from "@/lib/repository";
+import { isProvinceSlug } from "@/lib/vn-provinces";
 
 export const runtime = "nodejs";
 
 const inputSchema = z.object({
   url: z.string().trim().min(3).max(2048),
   amount: z.number().int().min(appConfig.minimumBid).max(9_999_999_999),
+  provinceSlug: z.string().trim().refine(isProvinceSlug, "Vui lòng chọn tỉnh/thành phố hợp lệ."),
 });
 
 export async function POST(request: Request) {
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
   try {
     const input = inputSchema.parse(await request.json());
     const metadata = await extractSeoMetadata(input.url);
-    const order = await createOrder(metadata, input.amount);
+    const order = await createOrder(metadata, input.amount, input.provinceSlug);
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Không thể tạo đơn hàng.";

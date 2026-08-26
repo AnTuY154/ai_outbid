@@ -29,7 +29,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [stats, setStats] = useState(initialStats);
   const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
-  const [prefill, setPrefill] = useState<{ url: string; targetAmount: number; revision: number } | null>(null);
+  const [prefill, setPrefill] = useState<{ url: string; targetAmount: number; provinceSlug: string; revision: number } | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionVisitorId = useRef<string | null>(null);
 
@@ -128,7 +128,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
 
       <section className="ranking-section board-shell" id="bang-xep-hang">
         <div className="category-bar" aria-label="Danh mục xếp hạng">
-          <span className="category-note"><CircleDot size={12} /> Một danh mục duy nhất · cập nhật realtime</span>
+          <span className="category-note"><CircleDot size={12} /> Địa điểm theo tỉnh/thành · cập nhật realtime</span>
         </div>
 
         <div className="ranking-list">
@@ -165,6 +165,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                   <div className="listing-meta">
                     <span>{item.domain}</span>
                     <span>Kính Mắt</span>
+                    <span>{item.province.name}</span>
                     <span><MousePointerClick size={14} /> {item.clickCount.toLocaleString("vi-VN")} click</span>
                   </div>
                 </div>
@@ -178,6 +179,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                     setPrefill((current) => ({
                       url: item.canonicalUrl,
                       targetAmount: item.totalPaid + 10_000,
+                      provinceSlug: item.province.slug,
                       revision: (current?.revision ?? 0) + 1,
                     }));
                   }}

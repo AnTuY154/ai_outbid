@@ -8,6 +8,16 @@ export type SeoMetadata = {
   faviconUrl: string | null;
 };
 
+export type ProvinceCategory = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
+export type OrderMetadata = SeoMetadata & {
+  province: ProvinceCategory;
+};
+
 export type LeaderboardEntry = SeoMetadata & {
   id: string;
   slug: string;
@@ -16,6 +26,7 @@ export type LeaderboardEntry = SeoMetadata & {
   clickCount: number;
   firstPaidAt: string;
   lastPaidAt: string;
+  province: ProvinceCategory;
 };
 
 export type PublicStats = {
@@ -30,7 +41,7 @@ export type PublicOrder = {
   status: "PENDING" | "PAID" | "EXPIRED" | "FAILED";
   amount: number;
   expiresAt: string;
-  metadata: SeoMetadata;
+  metadata: OrderMetadata;
   qrUrl: string | null;
   bankAccount: string | null;
   bankName: string | null;

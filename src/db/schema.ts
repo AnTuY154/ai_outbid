@@ -1,5 +1,7 @@
 import {
+  type AnyPgColumn,
   bigint,
+  boolean,
   date,
   index,
   integer,
@@ -12,12 +14,28 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import type { SeoMetadata } from "@/lib/types";
+import type { OrderMetadata } from "@/lib/types";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 };
+
+export const categories = pgTable(
+  "categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    kind: text("kind").notNull(),
+    parentId: uuid("parent_id").references((): AnyPgColumn => categories.id),
+    aliases: jsonb("aliases").$type<string[]>().default([]).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [uniqueIndex("categories_slug_unique").on(table.slug)],
+);
 
 export const listings = pgTable(
   "listings",
@@ -36,10 +54,14 @@ export const listings = pgTable(
     firstPaidAt: timestamp("first_paid_at", { withTimezone: true }).notNull(),
     lastPaidAt: timestamp("last_paid_at", { withTimezone: true }).notNull(),
     status: text("status").default("ACTIVE").notNull(),
+    provinceCategoryId: uuid("province_category_id")
+      .notNull()
+      .references(() => categories.id),
     ...timestamps,
   },
   (table) => [
     uniqueIndex("listings_canonical_url_unique").on(table.canonicalUrl),
+    uniqueIndex("listings_domain_unique").on(table.domain),
     uniqueIndex("listings_slug_unique").on(table.slug),
     index("listings_ranking_idx").on(table.status, table.totalPaid, table.firstPaidAt),
   ],
@@ -53,7 +75,7 @@ export const orders = pgTable(
     canonicalUrl: text("canonical_url").notNull(),
     expectedAmount: bigint("expected_amount", { mode: "number" }).notNull(),
     status: text("status").default("PENDING").notNull(),
-    metadata: jsonb("metadata").$type<SeoMetadata>().notNull(),
+    metadata: jsonb("metadata").$type<OrderMetadata>().notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     ...timestamps,

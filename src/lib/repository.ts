@@ -1,30 +1,36 @@
 import { createHash, randomBytes } from "node:crypto";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { clickRateLimits, listings, listingClickGuards, orders, payments, siteStats, visitors } from "@/db/schema";
+import { categories, clickRateLimits, listings, listingClickGuards, orders, payments, siteStats, visitors } from "@/db/schema";
 import { appConfig } from "./config";
 import { buildSepayQrUrl } from "./sepay";
-import type { LeaderboardEntry, PublicOrder, PublicStats, SeoMetadata } from "./types";
+import type { LeaderboardEntry, OrderMetadata, PublicOrder, PublicStats, SeoMetadata } from "./types";
+
+type ListingWithProvince = {
+  listing: typeof listings.$inferSelect;
+  province: { id: string; slug: string; name: string };
+};
 
 function listingToPublic(
-  row: typeof listings.$inferSelect,
+  row: ListingWithProvince,
   rank: number,
 ): LeaderboardEntry {
   return {
-    id: row.id,
+    id: row.listing.id,
     rank,
-    slug: row.slug,
-    originalUrl: row.originalUrl,
-    canonicalUrl: row.canonicalUrl,
-    domain: row.domain,
-    title: row.title,
-    description: row.description,
-    imageUrl: row.imageUrl,
-    faviconUrl: row.faviconUrl,
-    totalPaid: row.totalPaid,
-    clickCount: row.clickCount,
-    firstPaidAt: row.firstPaidAt.toISOString(),
-    lastPaidAt: row.lastPaidAt.toISOString(),
+    slug: row.listing.slug,
+    originalUrl: row.listing.originalUrl,
+    canonicalUrl: row.listing.canonicalUrl,
+    domain: row.listing.domain,
+    title: row.listing.title,
+    description: row.listing.description,
+    imageUrl: row.listing.imageUrl,
+    faviconUrl: row.listing.faviconUrl,
+    totalPaid: row.listing.totalPaid,
+    clickCount: row.listing.clickCount,
+    firstPaidAt: row.listing.firstPaidAt.toISOString(),
+    lastPaidAt: row.listing.lastPaidAt.toISOString(),
+    province: row.province,
   };
 }
 
@@ -48,14 +54,18 @@ function slugFor(metadata: SeoMetadata) {
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-|-$/g, "")
     .toLowerCase();
-  const suffix = createHash("sha1").update(metadata.canonicalUrl).digest("hex").slice(0, 7);
+  const suffix = createHash("sha1").update(metadata.domain).digest("hex").slice(0, 7);
   return `${base || "kinh-mat"}-${suffix}`;
 }
 
 export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   const rows = await getDb()
-    .select()
+    .select({
+      listing: listings,
+      province: { id: categories.id, slug: categories.slug, name: categories.name },
+    })
     .from(listings)
+    .innerJoin(categories, eq(listings.provinceCategoryId, categories.id))
     .where(eq(listings.status, "ACTIVE"))
     .orderBy(desc(listings.totalPaid), asc(listings.firstPaidAt));
   return rows.map((row, index) => listingToPublic(row, index + 1));
@@ -84,31 +94,38 @@ export async function getPublicStats(): Promise<PublicStats> {
     : { totalVisitors: 0, totalPageviews: 0, totalOutboundClicks: 0, totalRevenue: 0 };
 }
 
-export async function getListingTotalPaid(canonicalUrl: string) {
+export async function getListingTotalPaid(domain: string) {
   const [listing] = await getDb()
     .select({ totalPaid: listings.totalPaid })
     .from(listings)
-    .where(eq(listings.canonicalUrl, canonicalUrl))
+    .where(eq(listings.domain, domain))
     .limit(1);
   return listing?.totalPaid ?? 0;
 }
 
 // `targetTotal` is the desired total on the leaderboard. Returning listings
 // only pay the difference from their current accumulated amount.
-export async function createOrder(metadata: SeoMetadata, targetTotal: number): Promise<PublicOrder> {
+export async function createOrder(metadata: SeoMetadata, targetTotal: number, provinceSlug: string): Promise<PublicOrder> {
   const orderCode = `${appConfig.paymentPrefix}${randomBytes(4).toString("hex").toUpperCase()}`;
   const expiresAt = new Date(Date.now() + appConfig.orderExpiryMinutes * 60_000);
   const db = getDb();
-  const currentTotal = await getListingTotalPaid(metadata.canonicalUrl);
+  const currentTotal = await getListingTotalPaid(metadata.domain);
   const amountToPay = targetTotal - currentTotal;
   if (amountToPay <= 0) {
     throw new Error("Mức đặt hạng phải cao hơn tổng tiền hiện tại của website.");
   }
+  const [province] = await db
+    .select({ id: categories.id, slug: categories.slug, name: categories.name })
+    .from(categories)
+    .where(and(eq(categories.slug, provinceSlug), eq(categories.kind, "PROVINCE"), eq(categories.isActive, true)))
+    .limit(1);
+  if (!province) throw new Error("Tỉnh/thành phố không hợp lệ.");
+  const orderMetadata: OrderMetadata = { ...metadata, province };
   const [row] = await db.insert(orders).values({
     orderCode,
     canonicalUrl: metadata.canonicalUrl,
     expectedAmount: amountToPay,
-    metadata,
+    metadata: orderMetadata,
     expiresAt,
   }).returning();
   return orderToPublic(row);
@@ -185,21 +202,18 @@ export async function processPayment(input: ProcessPaymentInput) {
         description: metadata.description,
         imageUrl: metadata.imageUrl,
         faviconUrl: metadata.faviconUrl,
+        provinceCategoryId: metadata.province.id,
         totalPaid: input.amount,
         firstPaidAt: input.paidAt,
         lastPaidAt: input.paidAt,
       })
       .onConflictDoUpdate({
-        target: listings.canonicalUrl,
+        target: listings.domain,
         set: {
-          originalUrl: metadata.originalUrl,
-          title: metadata.title,
-          description: metadata.description,
-          imageUrl: metadata.imageUrl,
-          faviconUrl: metadata.faviconUrl,
           totalPaid: sql`${listings.totalPaid} + ${input.amount}`,
           lastPaidAt: input.paidAt,
           status: "ACTIVE",
+          provinceCategoryId: metadata.province.id,
           updatedAt: new Date(),
         },
       });
@@ -261,7 +275,7 @@ export async function consumeClickRateLimit(clientHash: string, limit = 30) {
   const result = await getDb().execute<{ clientHash: string }>(sql`
     INSERT INTO ${clickRateLimits} (${clickRateLimits.clientHash}, ${clickRateLimits.windowStartedAt}, ${clickRateLimits.requestCount})
     VALUES (${clientHash}, now(), 1)
-    ON CONFLICT (${clickRateLimits.clientHash}) DO UPDATE
+    ON CONFLICT ("client_hash") DO UPDATE
     SET
       window_started_at = CASE
         WHEN ${clickRateLimits.windowStartedAt} <= now() - interval '1 minute' THEN now()

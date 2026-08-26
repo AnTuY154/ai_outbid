@@ -16,6 +16,7 @@ export const demoLeaderboard: LeaderboardEntry[] = [
     clickCount: 1_248,
     firstPaidAt: new Date(Date.now() - 86400000 * 3).toISOString(),
     lastPaidAt: new Date(Date.now() - 3600000).toISOString(),
+    province: { id: "demo-ha-noi", slug: "ha-noi", name: "Hà Nội" },
   },
   {
     id: "demo-2",
@@ -32,6 +33,7 @@ export const demoLeaderboard: LeaderboardEntry[] = [
     clickCount: 736,
     firstPaidAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     lastPaidAt: new Date(Date.now() - 7200000).toISOString(),
+    province: { id: "demo-ho-chi-minh", slug: "ho-chi-minh", name: "Thành phố Hồ Chí Minh" },
   },
   {
     id: "demo-3",
@@ -48,6 +50,7 @@ export const demoLeaderboard: LeaderboardEntry[] = [
     clickCount: 421,
     firstPaidAt: new Date(Date.now() - 86400000).toISOString(),
     lastPaidAt: new Date(Date.now() - 10800000).toISOString(),
+    province: { id: "demo-da-nang", slug: "da-nang", name: "Đà Nẵng" },
   },
 ];
 
