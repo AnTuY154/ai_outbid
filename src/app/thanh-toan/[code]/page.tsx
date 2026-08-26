@@ -42,7 +42,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ code: 
           ) : (
             <div className="qr-placeholder"><div><Copy size={30} /><p>Cấu hình tài khoản SePay để hiển thị QR.</p></div></div>
           )}
-          <p>Đơn hết hạn lúc {new Date(order.expiresAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</p>
+          <p>Cảm ơn bạn đã đồng hành cùng Kính Mắt Leaderboard.</p>
         </aside>
       </div>
     </main>

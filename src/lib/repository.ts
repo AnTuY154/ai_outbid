@@ -103,6 +103,11 @@ export async function getListingTotalPaid(domain: string) {
   return listing?.totalPaid ?? 0;
 }
 
+export async function getListingRank(domain: string) {
+  const leaderboard = await getLeaderboard();
+  return leaderboard.find((listing) => listing.domain === domain)?.rank ?? null;
+}
+
 // `targetTotal` is the desired total on the leaderboard. Returning listings
 // only pay the difference from their current accumulated amount.
 export async function createOrder(metadata: SeoMetadata, targetTotal: number, provinceSlug: string): Promise<PublicOrder> {
@@ -273,7 +278,7 @@ export async function registerListingClick(slug: string, visitorHash: string) {
 
 export async function consumeClickRateLimit(clientHash: string, limit = 30) {
   const result = await getDb().execute<{ clientHash: string }>(sql`
-    INSERT INTO ${clickRateLimits} (${clickRateLimits.clientHash}, ${clickRateLimits.windowStartedAt}, ${clickRateLimits.requestCount})
+    INSERT INTO ${clickRateLimits} ("client_hash", "window_started_at", "request_count")
     VALUES (${clientHash}, now(), 1)
     ON CONFLICT ("client_hash") DO UPDATE
     SET
@@ -287,7 +292,7 @@ export async function consumeClickRateLimit(clientHash: string, limit = 30) {
       END
     WHERE ${clickRateLimits.windowStartedAt} <= now() - interval '1 minute'
        OR ${clickRateLimits.requestCount} < ${limit}
-    RETURNING ${clickRateLimits.clientHash}
+    RETURNING "client_hash"
   `);
   return result.length > 0;
 }

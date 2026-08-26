@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
-import { CircleDot, CreditCard, Glasses, Link2, MousePointerClick, Trophy } from "lucide-react";
+import { CreditCard, Glasses, Link2, MapPin, MousePointerClick, Trophy } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { COOKIE_CONSENT_EVENT, getCookieConsent } from "@/lib/cookie-consent";
@@ -32,6 +32,16 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
   const [prefill, setPrefill] = useState<{ url: string; targetAmount: number; provinceSlug: string; revision: number } | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionVisitorId = useRef<string | null>(null);
+  const provinceCounts = Array.from(
+    leaderboard.reduce((counts, listing) => {
+      const current = counts.get(listing.province.slug);
+      counts.set(listing.province.slug, {
+        name: listing.province.name === "Thành phố Hồ Chí Minh" ? "Sài Gòn" : listing.province.name,
+        count: (current?.count ?? 0) + 1,
+      });
+      return counts;
+    }, new Map<string, { name: string; count: number }>()),
+  );
 
   function getSessionVisitorId() {
     if (!sessionVisitorId.current) sessionVisitorId.current = crypto.randomUUID();
@@ -128,7 +138,14 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
 
       <section className="ranking-section board-shell" id="bang-xep-hang">
         <div className="category-bar" aria-label="Danh mục xếp hạng">
-          <span className="category-note"><CircleDot size={12} /> Địa điểm theo tỉnh/thành · cập nhật realtime</span>
+          {provinceCounts.length > 0 && <>
+            <span className="category-note"><MapPin size={13} /> Khu vực có cửa hàng</span>
+            <div className="category-chips" aria-label="Số cửa hàng theo tỉnh thành">
+              {provinceCounts.map(([slug, province]) => (
+                <span className="category-chip" key={slug}>{province.name}<b>{province.count}</b></span>
+              ))}
+            </div>
+          </>}
         </div>
 
         <div className="ranking-list">
