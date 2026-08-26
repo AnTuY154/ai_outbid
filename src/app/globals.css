@@ -320,24 +320,29 @@ button { cursor: pointer; }
 .ranking-card {
   min-height: 104px;
   display: grid;
-  grid-template-columns: 42px 52px 1fr 165px;
+  grid-template-columns: minmax(0, 1fr) 165px;
   align-items: center;
   gap: 11px;
   padding: 14px 10px;
   border-bottom: 1px solid var(--line);
-  cursor: pointer;
 }
-.ranking-card:focus-visible { outline: 3px solid rgba(238,118,95,.45); outline-offset: 3px; }
+.listing-link {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 42px 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  color: inherit;
+  text-decoration: none;
+}
+.listing-link:focus-visible { outline: 3px solid rgba(238,118,95,.45); outline-offset: 3px; }
 .ranking-card.rank-1,
 .ranking-card.rank-2,
 .ranking-card.rank-3 {
   min-height: 116px;
   margin-top: 10px;
   padding: 14px;
-  border: 1px solid rgba(238,118,95,.62);
   border-radius: 18px;
-  background: linear-gradient(90deg, rgba(255,236,231,.88), rgba(255,250,247,.84));
-  box-shadow: 0 6px 18px rgba(238,118,95,.06);
 }
 .rank-number { color: #595752; font-size: 13px; font-weight: 750; text-align: center; }
 .rank-1 .rank-number,
@@ -349,8 +354,57 @@ button { cursor: pointer; }
   place-items: center;
   border-radius: 11px;
   color: white;
-  background: var(--accent);
 }
+.ranking-card.rank-1 {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #d89b20;
+  background: radial-gradient(circle at 8% 10%, rgba(255,239,160,.9), transparent 23%), linear-gradient(115deg, #55370b, #a46b10 58%, #e1ad36);
+  box-shadow: 0 12px 28px rgba(130,84,9,.25);
+}
+.rank-1::after {
+  content: "DẪN ĐẦU";
+  position: absolute;
+  top: 0;
+  right: 18px;
+  padding: 4px 10px;
+  border-radius: 0 0 9px 9px;
+  color: #644000;
+  background: #ffe692;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .11em;
+}
+.rank-1 .listing-link { color: white; }
+.rank-1 .rank-number { color: #704600; background: linear-gradient(135deg, #fff7b2, #d99b1c); box-shadow: inset 0 0 0 1px rgba(255,255,255,.55); }
+.rank-1 .listing-logo { border-color: rgba(255,246,195,.7); box-shadow: 0 5px 12px rgba(57,35,0,.2); }
+.rank-1 .listing-price { color: #fff2a8; }
+.rank-1 .listing-main > p,
+.rank-1 .listing-meta { color: rgba(255,255,255,.76); }
+.rank-1 .listing-meta span + span::before { color: #ffe692; }
+.rank-1 .claim-rank { border-color: #f2c958; color: #684200; background: #fff4bd; }
+
+.ranking-card.rank-2 {
+  border: 1px solid #b8c8d4;
+  background: linear-gradient(125deg, #f8fbfc, #dde7eb 52%, #b4c3ca);
+  box-shadow: 0 8px 20px rgba(82,111,124,.14);
+}
+.rank-2 .rank-number { color: #344951; background: linear-gradient(135deg, #faffff, #94aab3); box-shadow: inset 0 0 0 1px rgba(255,255,255,.9); }
+.rank-2 .listing-logo { border-color: rgba(104,132,143,.34); }
+.rank-2 .listing-price { color: #48636e; }
+.rank-2 .listing-meta span + span::before { color: #78949f; }
+.rank-2 .claim-rank { border-color: #aabcc4; color: #405862; background: rgba(255,255,255,.78); }
+
+.ranking-card.rank-3 {
+  border: 1px solid #c98852;
+  background: linear-gradient(125deg, #fff8ee, #f2d2b1 54%, #ca8755);
+  box-shadow: 0 8px 20px rgba(130,71,32,.15);
+}
+.rank-3 .rank-number { color: #6b351a; background: linear-gradient(135deg, #ffe1b2, #ae5f32); box-shadow: inset 0 0 0 1px rgba(255,255,255,.65); }
+.rank-3 .listing-logo { border-color: rgba(153,78,37,.33); }
+.rank-3 .listing-price { color: #9a4b26; }
+.rank-3 .listing-meta span + span::before { color: #b56034; }
+.rank-3 .claim-rank { border-color: #d39a70; color: #803d20; background: rgba(255,250,244,.85); }
 .listing-logo {
   width: 48px;
   height: 48px;
@@ -597,6 +651,7 @@ button { cursor: pointer; }
     gap: 9px;
     padding: 13px 8px;
   }
+  .listing-link { grid-column: 1 / -1; grid-template-columns: 38px 46px minmax(0, 1fr); gap: 9px; }
   .listing-logo { width: 44px; height: 44px; }
   .listing-title-row h3 { font-size: 12px; }
   .listing-main > p { display: -webkit-box; white-space: normal; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
@@ -626,6 +681,7 @@ button { cursor: pointer; }
   .ranking-card.rank-1,
   .ranking-card.rank-2,
   .ranking-card.rank-3 { grid-template-columns: 34px 42px 1fr; }
+  .listing-link { grid-template-columns: 34px 42px minmax(0, 1fr); }
   .listing-logo { width: 40px; height: 40px; border-radius: 10px; }
   .listing-price { font-size: 10px; }
   .listing-meta { gap: 5px; }

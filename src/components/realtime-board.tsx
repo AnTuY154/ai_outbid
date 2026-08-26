@@ -32,7 +32,6 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
   const [prefill, setPrefill] = useState<{ url: string; targetAmount: number; revision: number } | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionVisitorId = useRef<string | null>(null);
-  const openListing = (slug: string) => window.open(`/go/${slug}`, "_blank", "noopener");
 
   function getSessionVisitorId() {
     if (!sessionVisitorId.current) sessionVisitorId.current = crypto.randomUUID();
@@ -137,41 +136,39 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
             <div className="ranking-fragment" key={item.id}>
             <article
               className={`ranking-card rank-${item.rank}`}
-              role="link"
-              tabIndex={0}
-              aria-label={`Mở trang web ${item.title}`}
-              onClick={() => openListing(item.slug)}
-              onKeyDown={(event) => {
-                if (event.currentTarget === event.target && (event.key === "Enter" || event.key === " ")) {
-                  event.preventDefault();
-                  openListing(item.slug);
-                }
-              }}
             >
-              <div className="rank-number">#{item.rank}</div>
-              <div className="listing-logo">
-                {item.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.imageUrl} alt="" />
-                ) : item.faviconUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.faviconUrl} alt="" />
-                ) : (
-                  <span>{item.title.slice(0, 1).toUpperCase()}</span>
-                )}
-              </div>
-              <div className="listing-main">
-                <div className="listing-title-row">
-                  <h3>{item.title}</h3>
-                  <strong className="listing-price">{formatMoney(item.totalPaid)}</strong>
+              <a
+                className="listing-link"
+                href={`/go/${item.slug}`}
+                target="_blank"
+                rel="sponsored noopener"
+                aria-label={`Mở trang web ${item.title}`}
+              >
+                <div className="rank-number">#{item.rank}</div>
+                <div className="listing-logo">
+                  {item.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.imageUrl} alt="" />
+                  ) : item.faviconUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.faviconUrl} alt="" />
+                  ) : (
+                    <span>{item.title.slice(0, 1).toUpperCase()}</span>
+                  )}
                 </div>
-                <p>{item.description || "Chưa có mô tả."}</p>
-                <div className="listing-meta">
-                  <span>{item.domain}</span>
-                  <span>Kính Mắt</span>
-                  <span><MousePointerClick size={14} /> {item.clickCount.toLocaleString("vi-VN")} click</span>
+                <div className="listing-main">
+                  <div className="listing-title-row">
+                    <h3>{item.title}</h3>
+                    <strong className="listing-price">{formatMoney(item.totalPaid)}</strong>
+                  </div>
+                  <p>{item.description || "Chưa có mô tả."}</p>
+                  <div className="listing-meta">
+                    <span>{item.domain}</span>
+                    <span>Kính Mắt</span>
+                    <span><MousePointerClick size={14} /> {item.clickCount.toLocaleString("vi-VN")} click</span>
+                  </div>
                 </div>
-              </div>
+              </a>
               <div className="listing-bid">
                 <a
                   className="claim-rank"
