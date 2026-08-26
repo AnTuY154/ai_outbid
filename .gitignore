@@ -8,4 +8,5 @@ out
 *.tsbuildinfo
 .DS_Store
 .vercel
-drizzle/meta
+drizzle/meta/*
+!drizzle/meta/_journal.json

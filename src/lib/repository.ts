@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, clickRateLimits, listings, listingClickGuards, orders, payments, siteStats, visitors } from "@/db/schema";
+import { categories, clickRateLimits, listingProvinces, listings, listingClickGuards, orders, payments, siteStats, visitors } from "@/db/schema";
 import { appConfig } from "./config";
 import { buildSepayQrUrl } from "./sepay";
 import type { LeaderboardEntry, OrderMetadata, PublicOrder, PublicStats, SeoMetadata } from "./types";
@@ -65,10 +65,16 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
       province: { id: categories.id, slug: categories.slug, name: categories.name },
     })
     .from(listings)
-    .innerJoin(categories, eq(listings.provinceCategoryId, categories.id))
+    .innerJoin(listingProvinces, eq(listingProvinces.listingId, listings.id))
+    .innerJoin(categories, eq(listingProvinces.provinceCategoryId, categories.id))
     .where(eq(listings.status, "ACTIVE"))
-    .orderBy(desc(listings.totalPaid), asc(listings.firstPaidAt));
-  return rows.map((row, index) => listingToPublic(row, index + 1));
+    .orderBy(asc(categories.sortOrder), desc(listings.totalPaid), asc(listings.firstPaidAt));
+  const ranksByProvince = new Map<string, number>();
+  return rows.map((row) => {
+    const rank = (ranksByProvince.get(row.province.id) ?? 0) + 1;
+    ranksByProvince.set(row.province.id, rank);
+    return listingToPublic(row, rank);
+  });
 }
 
 export async function getListing(slug: string) {
@@ -103,14 +109,14 @@ export async function getListingTotalPaid(domain: string) {
   return listing?.totalPaid ?? 0;
 }
 
-export async function getListingRank(domain: string) {
+export async function getListingRank(domain: string, provinceSlug?: string) {
   const leaderboard = await getLeaderboard();
-  return leaderboard.find((listing) => listing.domain === domain)?.rank ?? null;
+  return leaderboard.find((listing) => listing.domain === domain && (!provinceSlug || listing.province.slug === provinceSlug))?.rank ?? null;
 }
 
 // `targetTotal` is the desired total on the leaderboard. Returning listings
 // only pay the difference from their current accumulated amount.
-export async function createOrder(metadata: SeoMetadata, targetTotal: number, provinceSlug: string): Promise<PublicOrder> {
+export async function createOrder(metadata: SeoMetadata, targetTotal: number, provinceSlugs: string[]): Promise<PublicOrder> {
   const orderCode = `${appConfig.paymentPrefix}${randomBytes(4).toString("hex").toUpperCase()}`;
   const expiresAt = new Date(Date.now() + appConfig.orderExpiryMinutes * 60_000);
   const db = getDb();
@@ -119,13 +125,17 @@ export async function createOrder(metadata: SeoMetadata, targetTotal: number, pr
   if (amountToPay <= 0) {
     throw new Error("Mức đặt hạng phải cao hơn tổng tiền hiện tại của website.");
   }
-  const [province] = await db
+  const uniqueProvinceSlugs = [...new Set(provinceSlugs)];
+  const provinceRows = await db
     .select({ id: categories.id, slug: categories.slug, name: categories.name })
     .from(categories)
-    .where(and(eq(categories.slug, provinceSlug), eq(categories.kind, "PROVINCE"), eq(categories.isActive, true)))
-    .limit(1);
-  if (!province) throw new Error("Tỉnh/thành phố không hợp lệ.");
-  const orderMetadata: OrderMetadata = { ...metadata, province };
+    .where(and(inArray(categories.slug, uniqueProvinceSlugs), eq(categories.kind, "PROVINCE"), eq(categories.isActive, true)));
+  if (provinceRows.length !== uniqueProvinceSlugs.length) throw new Error("Có tỉnh/thành phố không hợp lệ hoặc không còn hoạt động.");
+  const provincesBySlug = new Map(provinceRows.map((province) => [province.slug, province]));
+  const orderMetadata: OrderMetadata = {
+    ...metadata,
+    provinces: uniqueProvinceSlugs.map((slug) => provincesBySlug.get(slug)!),
+  };
   const [row] = await db.insert(orders).values({
     orderCode,
     canonicalUrl: metadata.canonicalUrl,
@@ -196,7 +206,7 @@ export async function processPayment(input: ProcessPaymentInput) {
       .where(eq(orders.id, order.id));
 
     const metadata = order.metadata;
-    await tx
+    const [listing] = await tx
       .insert(listings)
       .values({
         canonicalUrl: metadata.canonicalUrl,
@@ -207,7 +217,8 @@ export async function processPayment(input: ProcessPaymentInput) {
         description: metadata.description,
         imageUrl: metadata.imageUrl,
         faviconUrl: metadata.faviconUrl,
-        provinceCategoryId: metadata.province.id,
+        // Retained for backward compatibility; locations are stored in listing_provinces.
+        provinceCategoryId: metadata.provinces[0].id,
         totalPaid: input.amount,
         firstPaidAt: input.paidAt,
         lastPaidAt: input.paidAt,
@@ -218,10 +229,18 @@ export async function processPayment(input: ProcessPaymentInput) {
           totalPaid: sql`${listings.totalPaid} + ${input.amount}`,
           lastPaidAt: input.paidAt,
           status: "ACTIVE",
-          provinceCategoryId: metadata.province.id,
           updatedAt: new Date(),
         },
-      });
+      })
+      .returning({ id: listings.id });
+
+    await tx
+      .insert(listingProvinces)
+      .values(metadata.provinces.map((province) => ({
+        listingId: listing.id,
+        provinceCategoryId: province.id,
+      })))
+      .onConflictDoNothing();
 
     await tx
       .insert(siteStats)
@@ -332,6 +351,28 @@ export async function recordVisit(input: {
           updatedAt: new Date(),
         },
       });
+
+    // Store reporting dates in Vietnam's local time, independent of the DB server timezone.
+    await tx.execute(sql`
+      WITH daily_visitor AS (
+        INSERT INTO visitor_daily_visits (day, visitor_id)
+        VALUES ((now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, ${input.visitorId}::uuid)
+        ON CONFLICT (day, visitor_id) DO NOTHING
+        RETURNING visitor_id
+      )
+      INSERT INTO daily_stats (day, unique_visitors, pageviews, updated_at)
+      VALUES (
+        (now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date,
+        (SELECT count(*) FROM daily_visitor),
+        1,
+        now()
+      )
+      ON CONFLICT (day) DO UPDATE
+      SET
+        unique_visitors = daily_stats.unique_visitors + EXCLUDED.unique_visitors,
+        pageviews = daily_stats.pageviews + EXCLUDED.pageviews,
+        updated_at = EXCLUDED.updated_at
+    `);
   });
   return getPublicStats();
 }

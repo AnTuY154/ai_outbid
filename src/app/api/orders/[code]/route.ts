@@ -10,6 +10,6 @@ export async function GET(
   const { code } = await context.params;
   const order = await getOrder(code.toUpperCase());
   if (!order) return NextResponse.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
-  const rank = order.status === "PAID" ? await getListingRank(order.metadata.domain) : null;
+  const rank = order.status === "PAID" ? await getListingRank(order.metadata.domain, order.metadata.provinces[0]?.slug) : null;
   return NextResponse.json({ order, rank }, { headers: { "Cache-Control": "no-store" } });
 }

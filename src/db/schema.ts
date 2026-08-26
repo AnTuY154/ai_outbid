@@ -67,6 +67,23 @@ export const listings = pgTable(
   ],
 );
 
+export const listingProvinces = pgTable(
+  "listing_provinces",
+  {
+    listingId: uuid("listing_id")
+      .notNull()
+      .references(() => listings.id, { onDelete: "cascade" }),
+    provinceCategoryId: uuid("province_category_id")
+      .notNull()
+      .references(() => categories.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.listingId, table.provinceCategoryId] }),
+    index("listing_provinces_province_listing_idx").on(table.provinceCategoryId, table.listingId),
+  ],
+);
+
 export const orders = pgTable(
   "orders",
   {
@@ -119,6 +136,22 @@ export const visitors = pgTable(
     userAgentHash: text("user_agent_hash"),
   },
   (table) => [uniqueIndex("visitors_visitor_id_unique").on(table.visitorId)],
+);
+
+// One row per visitor/day lets the database count daily unique visitors atomically.
+export const visitorDailyVisits = pgTable(
+  "visitor_daily_visits",
+  {
+    day: date("day").notNull(),
+    visitorId: uuid("visitor_id")
+      .notNull()
+      .references(() => visitors.visitorId, { onDelete: "cascade" }),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.day, table.visitorId] }),
+    index("visitor_daily_visits_visitor_id_idx").on(table.visitorId),
+  ],
 );
 
 export const siteStats = pgTable("site_stats", {

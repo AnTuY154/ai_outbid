@@ -30,6 +30,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
   const [stats, setStats] = useState(initialStats);
   const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
   const [prefill, setPrefill] = useState<{ url: string; targetAmount: number; provinceSlug: string; revision: number } | null>(null);
+  const [selectedProvinceSlug, setSelectedProvinceSlug] = useState<string | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionVisitorId = useRef<string | null>(null);
   const provinceCounts = Array.from(
@@ -42,6 +43,9 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
       return counts;
     }, new Map<string, { name: string; count: number }>()),
   );
+  const filteredLeaderboard = selectedProvinceSlug
+    ? leaderboard.filter((listing) => listing.province.slug === selectedProvinceSlug)
+    : leaderboard;
 
   function getSessionVisitorId() {
     if (!sessionVisitorId.current) sessionVisitorId.current = crypto.randomUUID();
@@ -141,15 +145,31 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
           {provinceCounts.length > 0 && <>
             <span className="category-note"><MapPin size={13} /> Khu vực có cửa hàng</span>
             <div className="category-chips" aria-label="Số cửa hàng theo tỉnh thành">
+              <button
+                className={`category-chip${selectedProvinceSlug === null ? " category-chip-active" : ""}`}
+                type="button"
+                aria-pressed={selectedProvinceSlug === null}
+                onClick={() => setSelectedProvinceSlug(null)}
+              >
+                All<b>{leaderboard.length}</b>
+              </button>
               {provinceCounts.map(([slug, province]) => (
-                <span className="category-chip" key={slug}>{province.name}<b>{province.count}</b></span>
+                <button
+                  className={`category-chip${selectedProvinceSlug === slug ? " category-chip-active" : ""}`}
+                  type="button"
+                  aria-pressed={selectedProvinceSlug === slug}
+                  key={slug}
+                  onClick={() => setSelectedProvinceSlug(slug)}
+                >
+                  {province.name}<b>{province.count}</b>
+                </button>
               ))}
             </div>
           </>}
         </div>
 
         <div className="ranking-list">
-          {leaderboard.map((item, index) => (
+          {filteredLeaderboard.map((item, index) => (
             <div className="ranking-fragment" key={item.id}>
             <article
               className={`ranking-card rank-${item.rank}`}
@@ -233,7 +253,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
               <aside className="activity-strip" aria-label="Hoạt động mới nhất">
                 <h2><span /> Hoạt động mới nhất</h2>
                 <div>
-                  {leaderboard.slice(0, 3).map((activity) => (
+                  {filteredLeaderboard.slice(0, 3).map((activity) => (
                     <a href={`/go/${activity.slug}`} target="_blank" rel="sponsored noopener" key={activity.id}>
                       <b>{activity.title}</b>
                       <span>đang ở #{activity.rank} · {formatMoney(activity.totalPaid)}</span>

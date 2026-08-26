@@ -63,6 +63,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
         </footer>
         <CookieConsentBanner />
+        <a
+          className="builder-badge"
+          href="https://www.facebook.com/antuy1504/?locale=vi_VN"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Xem Facebook của @antuy1504"
+        >
+          <span className="builder-badge-copy">Built by <strong>@antuy1504</strong></span>
+          <span className="builder-badge-avatar" aria-hidden="true">AT</span>
+        </a>
       </body>
     </html>
   );

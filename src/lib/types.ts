@@ -15,7 +15,7 @@ export type ProvinceCategory = {
 };
 
 export type OrderMetadata = SeoMetadata & {
-  province: ProvinceCategory;
+  provinces: ProvinceCategory[];
 };
 
 export type LeaderboardEntry = SeoMetadata & {

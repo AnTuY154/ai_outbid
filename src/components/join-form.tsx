@@ -29,7 +29,7 @@ export function JoinForm({
   const router = useRouter();
   const initialTarget = Math.max(minimumBid, prefill?.targetAmount ?? suggestedBid);
   const [url, setUrl] = useState(prefill?.url ?? "");
-  const [provinceSlug, setProvinceSlug] = useState(prefill?.provinceSlug ?? "");
+  const [provinceSlugs, setProvinceSlugs] = useState<string[]>(prefill?.provinceSlug ? [prefill.provinceSlug] : []);
   const [provincePickerOpen, setProvincePickerOpen] = useState(false);
   const [provinceSearch, setProvinceSearch] = useState("");
   const [amount, setAmount] = useState(initialTarget);
@@ -40,7 +40,7 @@ export function JoinForm({
   const [error, setError] = useState("");
   const provincePickerRef = useRef<HTMLDivElement>(null);
   const provinceSearchRef = useRef<HTMLInputElement>(null);
-  const selectedProvince = provinces.find((province) => province.slug === provinceSlug);
+  const selectedProvinces = provinces.filter((province) => provinceSlugs.includes(province.slug));
   const filteredProvinces = provinces.filter((province) => normalizeSearch(province.name).includes(normalizeSearch(provinceSearch)));
 
   useEffect(() => {
@@ -107,14 +107,14 @@ export function JoinForm({
   const amountToPay = Math.max(0, amount - currentTotalPaid);
 
   async function createPayment() {
-    if (!metadata || !provinceSlug) return;
+    if (!metadata || !provinceSlugs.length) return;
     setError("");
     setLoading("order");
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url: metadata.canonicalUrl, amount, provinceSlug }),
+        body: JSON.stringify({ url: metadata.canonicalUrl, amount, provinceSlugs }),
       });
       const data = (await response.json()) as { order?: PublicOrder; error?: string };
       if (!response.ok || !data.order) throw new Error(data.error ?? "Không thể tạo thanh toán.");
@@ -167,7 +167,7 @@ export function JoinForm({
                 setMetadata(null);
                 setCurrentTotalPaid(0);
               }}
-              placeholder="URL website hoặc sản phẩm kính mắt"
+              placeholder="URL website hoặc link page FB"
               autoComplete="url"
               required
             />
@@ -183,7 +183,13 @@ export function JoinForm({
               onClick={() => setProvincePickerOpen((open) => !open)}
             >
               <MapPin size={17} aria-hidden="true" />
-              <span className={selectedProvince ? undefined : "province-placeholder"}>{selectedProvince?.name ?? "Chọn tỉnh/thành"}</span>
+              <span className={selectedProvinces.length ? undefined : "province-placeholder"}>
+                {selectedProvinces.length === 0
+                  ? "Chọn tỉnh/thành"
+                  : selectedProvinces.length === 1
+                    ? selectedProvinces[0].name
+                    : `${selectedProvinces.length} tỉnh/thành đã chọn`}
+              </span>
               <ChevronDown className={provincePickerOpen ? "province-chevron-open" : undefined} size={16} aria-hidden="true" />
             </button>
             {provincePickerOpen && (
@@ -200,33 +206,33 @@ export function JoinForm({
                     autoComplete="off"
                   />
                 </div>
-                <div className="province-options" id="province-options" role="listbox" aria-label="Tỉnh hoặc thành phố">
+                <div className="province-options" id="province-options" role="listbox" aria-label="Tỉnh hoặc thành phố" aria-multiselectable="true">
                   {filteredProvinces.length ? filteredProvinces.map((province) => (
                     <button
                       key={province.slug}
                       type="button"
                       role="option"
-                      aria-selected={province.slug === provinceSlug}
-                      className={province.slug === provinceSlug ? "province-option-selected" : undefined}
+                      aria-selected={provinceSlugs.includes(province.slug)}
+                      className={provinceSlugs.includes(province.slug) ? "province-option-selected" : undefined}
                       onClick={() => {
-                        setProvinceSlug(province.slug);
-                        setProvinceSearch("");
-                        setProvincePickerOpen(false);
+                        setProvinceSlugs((current) => current.includes(province.slug)
+                          ? current.filter((slug) => slug !== province.slug)
+                          : [...current, province.slug]);
                       }}
                     >
                       <span>{province.name}</span>
-                      {province.slug === provinceSlug && <Check size={15} aria-hidden="true" />}
+                      {provinceSlugs.includes(province.slug) && <Check size={15} aria-hidden="true" />}
                     </button>
                   )) : <p className="province-empty">Không tìm thấy tỉnh/thành phù hợp.</p>}
                 </div>
               </div>
             )}
           </div>
-          <button type="submit" className="outbid-button" disabled={loading !== null || !url.trim() || !provinceSlug}>
+          <button type="submit" className="outbid-button" disabled={loading !== null || !url.trim() || !provinceSlugs.length}>
             {loading === "preview" ? <LoaderCircle className="spin" size={18} /> : "Đặt hạng"}
           </button>
         </form>
-        <p className="returning-note" id="province-help">Chọn tỉnh/thành phố nơi cửa hàng hoạt động. Đã có trên bảng? Nhập lại đúng URL để cộng thêm ngân sách và tăng hạng.</p>
+        <p className="returning-note" id="province-help">Chọn một hoặc nhiều tỉnh/thành phố nơi cửa hàng hoạt động. Đã có trên bảng? Nhập lại đúng URL để cộng thêm ngân sách và tăng hạng ở mọi khu vực đã chọn.</p>
 
         {metadata && (
           <div className="seo-preview">
@@ -248,7 +254,7 @@ export function JoinForm({
               type="button"
               className="payment-button"
               onClick={createPayment}
-              disabled={loading !== null || amount < minimumBid || amountToPay <= 0 || !provinceSlug}
+              disabled={loading !== null || amount < minimumBid || amountToPay <= 0 || !provinceSlugs.length}
             >
               {loading === "order" ? <LoaderCircle className="spin" size={18} /> : <>Thanh toán thêm {formatMoney(amountToPay)} <ArrowRight size={17} /></>}
             </button>
