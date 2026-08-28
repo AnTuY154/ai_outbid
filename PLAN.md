@@ -141,11 +141,13 @@ Bảng xếp hạng chỉ hiển thị listing có trạng thái `ACTIVE`.
 Quy tắc sắp xếp:
 
 ```sql
-ORDER BY total_paid DESC, first_paid_at ASC
+ORDER BY total_paid DESC, created_at ASC, id ASC
 ```
 
 - URL có tổng tiền cao hơn đứng trước.
-- Nếu bằng tiền, URL thanh toán lần đầu sớm hơn đứng trước.
+- Nếu bằng tiền, URL được tạo trên bảng sớm hơn đứng trước; `id` là tie-break cuối để thứ tự luôn ổn định.
+- Mục All đánh số hạng liên tục trên toàn bộ listing. Mỗi tỉnh/thành đánh số hạng liên tục riêng trong số listing hoạt động tại khu vực đó.
+- Một listing chỉ xuất hiện một lần trong All nhưng có thể mang một thứ hạng khác ở từng tỉnh/thành đã đăng ký.
 - Một URL có thể thanh toán nhiều lần.
 - Mỗi khoản thanh toán thành công được cộng vào `total_paid`. Khi website đã có trên bảng, số tiền trong form là **tổng mục tiêu**; đơn thanh toán chỉ thu phần chênh giữa tổng mục tiêu và `total_paid` hiện có.
 

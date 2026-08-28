@@ -3,7 +3,7 @@ import type { LeaderboardEntry, PublicStats } from "./types";
 export const demoLeaderboard: LeaderboardEntry[] = [
   {
     id: "demo-1",
-    rank: 1,
+    globalRank: 1,
     slug: "kinh-mat-viet",
     originalUrl: "https://example.com/kinh-mat-viet",
     canonicalUrl: "https://example.com/kinh-mat-viet",
@@ -16,11 +16,11 @@ export const demoLeaderboard: LeaderboardEntry[] = [
     clickCount: 1_248,
     firstPaidAt: new Date(Date.now() - 86400000 * 3).toISOString(),
     lastPaidAt: new Date(Date.now() - 3600000).toISOString(),
-    province: { id: "demo-ha-noi", slug: "ha-noi", name: "Hà Nội" },
+    provinces: [{ id: "demo-ha-noi", slug: "ha-noi", name: "Hà Nội", rank: 1 }],
   },
   {
     id: "demo-2",
-    rank: 2,
+    globalRank: 2,
     slug: "the-gioi-gong",
     originalUrl: "https://example.org/gong-kinh",
     canonicalUrl: "https://example.org/gong-kinh",
@@ -33,11 +33,11 @@ export const demoLeaderboard: LeaderboardEntry[] = [
     clickCount: 736,
     firstPaidAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     lastPaidAt: new Date(Date.now() - 7200000).toISOString(),
-    province: { id: "demo-ho-chi-minh", slug: "ho-chi-minh", name: "Thành phố Hồ Chí Minh" },
+    provinces: [{ id: "demo-ho-chi-minh", slug: "ho-chi-minh", name: "Thành phố Hồ Chí Minh", rank: 1 }],
   },
   {
     id: "demo-3",
-    rank: 3,
+    globalRank: 3,
     slug: "sunny-eyewear",
     originalUrl: "https://example.net/sunglasses",
     canonicalUrl: "https://example.net/sunglasses",
@@ -50,7 +50,7 @@ export const demoLeaderboard: LeaderboardEntry[] = [
     clickCount: 421,
     firstPaidAt: new Date(Date.now() - 86400000).toISOString(),
     lastPaidAt: new Date(Date.now() - 10800000).toISOString(),
-    province: { id: "demo-da-nang", slug: "da-nang", name: "Đà Nẵng" },
+    provinces: [{ id: "demo-da-nang", slug: "da-nang", name: "Đà Nẵng", rank: 1 }],
   },
 ];
 

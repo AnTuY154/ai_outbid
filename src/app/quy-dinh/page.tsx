@@ -8,10 +8,12 @@ export default function RulesPage() {
         <h2>Cách thứ hạng được xác định</h2>
         <ul>
           <li>Thứ hạng dựa trên tổng tiền thanh toán thành công của mỗi URL trên bảng.</li>
-          <li>Website có tổng tiền cao hơn được xếp trên. Nếu bằng nhau, website thanh toán lần đầu sớm hơn được xếp trên.</li>
+          <li>Website có tổng tiền cao hơn được xếp trên. Nếu bằng nhau, website được tạo trên bảng sớm hơn được xếp trên.</li>
+          <li>Mục All tính hạng trên toàn bộ website; mỗi tỉnh/thành tính một bảng hạng riêng trong số website hoạt động tại khu vực đó.</li>
+          <li>Một website chỉ xuất hiện một lần trong All nhưng có thể có hạng khác nhau ở từng tỉnh/thành.</li>
           <li>Để tăng hạng cho cùng website, nhập lại đúng URL và chọn tổng ngân sách mục tiêu cao hơn tổng hiện có; đơn mới chỉ thu phần chênh.</li>
           <li>Vị trí #1 yêu cầu tổng mục tiêu cao hơn tổng của listing đang dẫn đầu. Trả mức thấp hơn vẫn có thể xuất hiện ở vị trí tương ứng.</li>
-          <li>Chỉ giao dịch SePay hợp lệ, đúng nội dung và số tiền của đơn mới được ghi nhận. Giao dịch thiếu tiền, trùng hoặc hết hạn có thể không được xử lý.</li>
+          <li>Với mức đặt hạng lớn hơn 0đ, chỉ giao dịch SePay hợp lệ, đúng nội dung và số tiền của đơn mới được ghi nhận. Mức 0đ được xác nhận ngay khi gửi đăng ký.</li>
         </ul>
         <h2>Quy định về listing</h2>
         <ul>

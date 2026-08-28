@@ -14,6 +14,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { OrderMetadata } from "@/lib/types";
 
 const timestamps = {
@@ -61,9 +62,10 @@ export const listings = pgTable(
   },
   (table) => [
     uniqueIndex("listings_canonical_url_unique").on(table.canonicalUrl),
-    uniqueIndex("listings_domain_unique").on(table.domain),
     uniqueIndex("listings_slug_unique").on(table.slug),
-    index("listings_ranking_idx").on(table.status, table.totalPaid, table.firstPaidAt),
+    index("listings_active_ranking_idx")
+      .on(table.totalPaid.desc(), table.createdAt.asc(), table.id.asc())
+      .where(sql`${table.status} = 'ACTIVE'`),
   ],
 );
 

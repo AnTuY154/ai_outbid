@@ -1,12 +1,13 @@
 "use client";
 
-import { CheckCircle2, Clock3, LoaderCircle, Trophy, X } from "lucide-react";
+import { CheckCircle2, Clock3, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { PublicOrder } from "@/lib/types";
+import type { ListingRanking, PublicOrder } from "@/lib/types";
+import { RankCelebration } from "./rank-celebration";
 
 export function PaymentStatus({ initialOrder }: { initialOrder: PublicOrder }) {
   const [order, setOrder] = useState(initialOrder);
-  const [rank, setRank] = useState<number | null>(null);
+  const [ranking, setRanking] = useState<ListingRanking | null>(null);
   const [celebrationOpen, setCelebrationOpen] = useState(initialOrder.status === "PAID");
 
   useEffect(() => {
@@ -14,10 +15,10 @@ export function PaymentStatus({ initialOrder }: { initialOrder: PublicOrder }) {
     const timer = setInterval(async () => {
       const response = await fetch(`/api/orders/${order.code}`, { cache: "no-store" });
       if (!response.ok) return;
-      const data = (await response.json()) as { order: PublicOrder; rank: number | null };
+      const data = (await response.json()) as { order: PublicOrder; ranking: ListingRanking | null };
       setOrder(data.order);
       if (data.order.status === "PAID") {
-        setRank(data.rank);
+        setRanking(data.ranking);
         setCelebrationOpen(true);
       }
     }, 3_000);
@@ -25,11 +26,11 @@ export function PaymentStatus({ initialOrder }: { initialOrder: PublicOrder }) {
   }, [order.code, order.status]);
 
   useEffect(() => {
-    if (order.status !== "PAID" || rank !== null) return;
+    if (order.status !== "PAID" || ranking !== null) return;
     void fetch(`/api/orders/${order.code}`, { cache: "no-store" })
-      .then(async (response) => response.ok ? response.json() as Promise<{ rank: number | null }> : null)
-      .then((data) => setRank(data?.rank ?? null));
-  }, [order.code, order.status, rank]);
+      .then(async (response) => response.ok ? response.json() as Promise<{ ranking: ListingRanking | null }> : null)
+      .then((data) => setRanking(data?.ranking ?? null));
+  }, [order.code, order.status, ranking]);
 
   const status = order.status === "PAID"
     ? <div className="payment-status paid"><CheckCircle2 size={18} /> Đã nhận thanh toán</div>
@@ -39,17 +40,6 @@ export function PaymentStatus({ initialOrder }: { initialOrder: PublicOrder }) {
 
   return <>
     {status}
-    {celebrationOpen && (
-      <div className="rank-celebration-backdrop" role="presentation">
-        <section className="rank-celebration" role="dialog" aria-modal="true" aria-labelledby="rank-celebration-title">
-          <button type="button" className="rank-celebration-close" onClick={() => setCelebrationOpen(false)} aria-label="Đóng thông báo"><X size={17} /></button>
-          <span className="rank-celebration-icon"><Trophy size={28} /></span>
-          <p className="rank-celebration-eyebrow">THANH TOÁN THÀNH CÔNG</p>
-          <h2 id="rank-celebration-title">Chúc mừng bạn đã thăng hạng!</h2>
-          <p>{rank ? <>Website của bạn hiện ở <strong>hạng #{rank}</strong> trên bảng xếp hạng.</> : "Bảng xếp hạng đang cập nhật vị trí mới của bạn."}</p>
-          <a href="/#bang-xep-hang" className="rank-celebration-link">Xem bảng xếp hạng</a>
-        </section>
-      </div>
-    )}
+    {celebrationOpen && <RankCelebration ranking={ranking} onClose={() => setCelebrationOpen(false)} />}
   </>;
 }

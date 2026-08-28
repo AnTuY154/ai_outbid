@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getListingRank, getOrder } from "@/lib/repository";
+import { getListingRanking, getOrder } from "@/lib/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +10,6 @@ export async function GET(
   const { code } = await context.params;
   const order = await getOrder(code.toUpperCase());
   if (!order) return NextResponse.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
-  const rank = order.status === "PAID" ? await getListingRank(order.metadata.domain, order.metadata.provinces[0]?.slug) : null;
-  return NextResponse.json({ order, rank }, { headers: { "Cache-Control": "no-store" } });
+  const ranking = order.status === "PAID" ? await getListingRanking(order.metadata.canonicalUrl) : null;
+  return NextResponse.json({ order, ranking }, { headers: { "Cache-Control": "no-store" } });
 }

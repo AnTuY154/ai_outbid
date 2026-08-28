@@ -35,17 +35,25 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
   const sessionVisitorId = useRef<string | null>(null);
   const provinceCounts = Array.from(
     leaderboard.reduce((counts, listing) => {
-      const current = counts.get(listing.province.slug);
-      counts.set(listing.province.slug, {
-        name: listing.province.name === "Thành phố Hồ Chí Minh" ? "Sài Gòn" : listing.province.name,
-        count: (current?.count ?? 0) + 1,
-      });
+      for (const province of listing.provinces) {
+        const current = counts.get(province.slug);
+        counts.set(province.slug, {
+          name: province.name === "Thành phố Hồ Chí Minh" ? "Sài Gòn" : province.name,
+          count: (current?.count ?? 0) + 1,
+        });
+      }
       return counts;
     }, new Map<string, { name: string; count: number }>()),
   );
   const filteredLeaderboard = selectedProvinceSlug
-    ? leaderboard.filter((listing) => listing.province.slug === selectedProvinceSlug)
+    ? leaderboard.filter((listing) => listing.provinces.some((province) => province.slug === selectedProvinceSlug))
     : leaderboard;
+  const scopedLeaderboard = filteredLeaderboard.map((item) => ({
+    item,
+    displayRank: selectedProvinceSlug
+      ? item.provinces.find((province) => province.slug === selectedProvinceSlug)!.rank
+      : item.globalRank,
+  }));
 
   function getSessionVisitorId() {
     if (!sessionVisitorId.current) sessionVisitorId.current = crypto.randomUUID();
@@ -59,23 +67,25 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
     return () => window.removeEventListener(COOKIE_CONSENT_EVENT, syncConsent);
   }, []);
 
+  const fetchPublicData = useCallback(async () => {
+    const [boardResponse, statsResponse] = await Promise.all([
+      fetch("/api/leaderboard", { cache: "no-store" }),
+      fetch("/api/stats", { cache: "no-store" }),
+    ]);
+    if (boardResponse.ok) {
+      const data = (await boardResponse.json()) as { leaderboard: LeaderboardEntry[] };
+      setLeaderboard(data.leaderboard);
+    }
+    if (statsResponse.ok) {
+      const data = (await statsResponse.json()) as { stats: PublicStats };
+      setStats(data.stats);
+    }
+  }, []);
+
   const refreshPublicData = useCallback(() => {
     if (refreshTimer.current) clearTimeout(refreshTimer.current);
-    refreshTimer.current = setTimeout(async () => {
-      const [boardResponse, statsResponse] = await Promise.all([
-        fetch("/api/leaderboard", { cache: "no-store" }),
-        fetch("/api/stats", { cache: "no-store" }),
-      ]);
-      if (boardResponse.ok) {
-        const data = (await boardResponse.json()) as { leaderboard: LeaderboardEntry[] };
-        setLeaderboard(data.leaderboard);
-      }
-      if (statsResponse.ok) {
-        const data = (await statsResponse.json()) as { stats: PublicStats };
-        setStats(data.stats);
-      }
-    }, 350);
-  }, []);
+    refreshTimer.current = setTimeout(() => { void fetchPublicData(); }, 350);
+  }, [fetchPublicData]);
 
   useEffect(() => {
     const visitorId = analyticsAllowed ? getVisitorId() : getSessionVisitorId();
@@ -136,8 +146,9 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
       <JoinForm
         key={prefill?.revision ?? "default"}
         minimumBid={minimumBid}
-        suggestedBid={Math.max(minimumBid, (leaderboard[0]?.totalPaid ?? 0) + 10_000)}
+        suggestedBid={Math.max(minimumBid, (scopedLeaderboard[0]?.item.totalPaid ?? 0) + 10_000)}
         prefill={prefill}
+        onFreeOrderComplete={fetchPublicData}
       />
 
       <section className="ranking-section board-shell" id="bang-xep-hang">
@@ -169,26 +180,25 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
         </div>
 
         <div className="ranking-list">
-          {filteredLeaderboard.map((item, index) => (
+          {scopedLeaderboard.map(({ item, displayRank }, index) => (
             <div className="ranking-fragment" key={item.id}>
             <article
-              className={`ranking-card rank-${item.rank}`}
+              className={`ranking-card rank-${displayRank}`}
             >
               <a
-                className={`listing-link${item.rank === 1 ? " rank-one-link" : ""}`}
+                className="listing-link"
                 href={`/go/${item.slug}`}
                 target="_blank"
                 rel="sponsored noopener"
                 aria-label={`Mở trang web ${item.title}`}
               >
-                {item.rank !== 1 && <div className="rank-number">#{item.rank}</div>}
                 <div className="listing-logo">
-                  {item.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imageUrl} alt="" />
-                  ) : item.faviconUrl ? (
+                  {item.faviconUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.faviconUrl} alt="" />
+                  ) : item.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.imageUrl} alt="" />
                   ) : (
                     <span>{item.title.slice(0, 1).toUpperCase()}</span>
                   )}
@@ -196,41 +206,22 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                 <div className="listing-main">
                   <div className="listing-title-row">
                     <h3>{item.title}</h3>
-                    {item.rank !== 1 && <strong className="listing-price">{formatMoney(item.totalPaid)}</strong>}
                   </div>
                   <p>{item.description || "Chưa có mô tả."}</p>
                   <div className="listing-meta">
                     <span>{item.domain}</span>
                     <span>Kính Mắt</span>
-                    <span>{item.province.name}</span>
+                    <span>{selectedProvinceSlug
+                      ? item.provinces.find((province) => province.slug === selectedProvinceSlug)?.name
+                      : item.provinces.map((province) => province.name).join(", ")}</span>
                     <span><MousePointerClick size={14} /> {item.clickCount.toLocaleString("vi-VN")} click</span>
                   </div>
                 </div>
               </a>
-              {item.rank === 1 ? (
-                <div className="listing-bid rank-one-summary">
-                  <strong className="listing-price">{formatMoney(item.totalPaid)}</strong>
-                  <div className="rank-one-actions">
-                    <span className="rank-number">#1</span>
-                    <a
-                      className="claim-rank"
-                      href="#tham-gia"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setPrefill((current) => ({
-                          url: item.canonicalUrl,
-                          targetAmount: item.totalPaid + 10_000,
-                          provinceSlug: item.province.slug,
-                          revision: (current?.revision ?? 0) + 1,
-                        }));
-                      }}
-                    >
-                      Vượt hạng
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <div className="listing-bid">
+              <div className="listing-bid rank-one-summary">
+                <strong className="listing-price">{formatMoney(item.totalPaid)}</strong>
+                <div className="rank-one-actions">
+                  <span className="rank-number">#{displayRank}</span>
                   <a
                     className="claim-rank"
                     href="#tham-gia"
@@ -239,24 +230,24 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                       setPrefill((current) => ({
                         url: item.canonicalUrl,
                         targetAmount: item.totalPaid + 10_000,
-                        provinceSlug: item.province.slug,
+                        provinceSlug: selectedProvinceSlug ?? item.provinces[0]?.slug,
                         revision: (current?.revision ?? 0) + 1,
                       }));
                     }}
                   >
-                    Vượt hạng với {formatMoney(item.totalPaid + 10_000)}
+                    Vượt hạng
                   </a>
                 </div>
-              )}
+              </div>
             </article>
             {index === 2 && (
               <aside className="activity-strip" aria-label="Hoạt động mới nhất">
                 <h2><span /> Hoạt động mới nhất</h2>
                 <div>
-                  {filteredLeaderboard.slice(0, 3).map((activity) => (
+                  {scopedLeaderboard.slice(0, 3).map(({ item: activity, displayRank: activityRank }) => (
                     <a href={`/go/${activity.slug}`} target="_blank" rel="sponsored noopener" key={activity.id}>
                       <b>{activity.title}</b>
-                      <span>đang ở #{activity.rank} · {formatMoney(activity.totalPaid)}</span>
+                      <span>đang ở #{activityRank} · {formatMoney(activity.totalPaid)}</span>
                     </a>
                   ))}
                 </div>

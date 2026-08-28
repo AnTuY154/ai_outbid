@@ -1,6 +1,6 @@
 import { load } from "cheerio";
 import type { SeoMetadata } from "./types";
-import { assertPublicDestination, normalizeUrl, parsePublicUrl } from "./url-security";
+import { assertPublicDestination, normalizeSocialUrl, normalizeUrl, parsePublicUrl } from "./url-security";
 
 const MAX_HTML_BYTES = 1_500_000;
 const MAX_REDIRECTS = 3;
@@ -81,7 +81,9 @@ export async function extractSeoMetadata(input: string): Promise<SeoMetadata> {
     const finalHost = finalUrl.hostname.toLowerCase().replace(/^www\./, "");
     if (candidateHost === finalHost) canonicalSource = candidate.toString();
   }
-  const canonicalUrl = normalizeUrl(canonicalSource);
+  // Social platforms can publish a generic canonical URL for different
+  // profiles. Keep the submitted account path or ID as the listing identity.
+  const canonicalUrl = normalizeSocialUrl(original.toString()) || normalizeUrl(canonicalSource);
   const canonical = new URL(canonicalUrl);
   const imageUrl = absoluteUrl(property("og:image") || named("twitter:image"), finalUrl);
   const faviconUrl = absoluteUrl(

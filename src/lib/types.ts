@@ -14,19 +14,26 @@ export type ProvinceCategory = {
   name: string;
 };
 
+export type ProvinceRanking = ProvinceCategory & {
+  rank: number;
+};
+
+export type ListingRanking = {
+  globalRank: number;
+  provinces: ProvinceRanking[];
+};
+
 export type OrderMetadata = SeoMetadata & {
   provinces: ProvinceCategory[];
 };
 
-export type LeaderboardEntry = SeoMetadata & {
+export type LeaderboardEntry = SeoMetadata & ListingRanking & {
   id: string;
   slug: string;
-  rank: number;
   totalPaid: number;
   clickCount: number;
   firstPaidAt: string;
   lastPaidAt: string;
-  province: ProvinceCategory;
 };
 
 export type PublicStats = {

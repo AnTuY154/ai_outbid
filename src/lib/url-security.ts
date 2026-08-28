@@ -8,7 +8,30 @@ const TRACKING_PARAMS = new Set([
   "mc_eid",
   "ref",
   "referrer",
+  "trk",
+  "igsh",
+  "igshid",
+  "mibextid",
+  "si",
 ]);
+
+const SOCIAL_HOST_ALIASES: Record<string, string> = {
+  "facebook.com": "facebook.com",
+  "m.facebook.com": "facebook.com",
+  "mbasic.facebook.com": "facebook.com",
+  "instagram.com": "instagram.com",
+  "m.instagram.com": "instagram.com",
+  "tiktok.com": "tiktok.com",
+  "m.tiktok.com": "tiktok.com",
+  "vm.tiktok.com": "tiktok.com",
+  "youtube.com": "youtube.com",
+  "m.youtube.com": "youtube.com",
+  "linkedin.com": "linkedin.com",
+  "zalo.me": "zalo.me",
+  "threads.net": "threads.net",
+  "x.com": "x.com",
+  "twitter.com": "x.com",
+};
 
 function isPrivateIpv4(address: string) {
   const octets = address.split(".").map(Number);
@@ -80,6 +103,16 @@ export function normalizeUrl(input: string) {
   url.searchParams.sort();
   if (url.pathname !== "/") url.pathname = url.pathname.replace(/\/+$/, "");
   return url.toString();
+}
+
+export function normalizeSocialUrl(input: string) {
+  const url = parsePublicUrl(input);
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+  const canonicalHost = SOCIAL_HOST_ALIASES[hostname];
+  if (!canonicalHost) return null;
+
+  url.hostname = canonicalHost;
+  return normalizeUrl(url.toString());
 }
 
 export async function assertPublicDestination(url: URL) {

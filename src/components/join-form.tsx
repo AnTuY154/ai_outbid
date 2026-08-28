@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, ChevronDown, Globe2, LoaderCircle, MapPin, Minus, Plus, Search, ShieldCheck } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 import { provinces } from "@/lib/vn-provinces";
-import type { PublicOrder, SeoMetadata } from "@/lib/types";
+import type { ListingRanking, PublicOrder, SeoMetadata } from "@/lib/types";
+import { RankCelebration } from "./rank-celebration";
 
 function formatBidAmount(amount: number) {
   return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(amount);
@@ -21,10 +22,12 @@ export function JoinForm({
   minimumBid,
   suggestedBid,
   prefill,
+  onFreeOrderComplete,
 }: {
   minimumBid: number;
   suggestedBid: number;
   prefill: Prefill;
+  onFreeOrderComplete?: () => Promise<void> | void;
 }) {
   const router = useRouter();
   const initialTarget = Math.max(minimumBid, prefill?.targetAmount ?? suggestedBid);
@@ -38,6 +41,7 @@ export function JoinForm({
   const [currentTotalPaid, setCurrentTotalPaid] = useState(0);
   const [loading, setLoading] = useState<"preview" | "order" | null>(null);
   const [error, setError] = useState("");
+  const [freeConfirmation, setFreeConfirmation] = useState<{ ranking: ListingRanking | null } | null>(null);
   const provincePickerRef = useRef<HTMLDivElement>(null);
   const provinceSearchRef = useRef<HTMLInputElement>(null);
   const selectedProvinces = provinces.filter((province) => provinceSlugs.includes(province.slug));
@@ -75,6 +79,11 @@ export function JoinForm({
       });
       const data = (await response.json()) as { metadata?: SeoMetadata; currentTotalPaid?: number; error?: string };
       if (!response.ok || !data.metadata) throw new Error(data.error ?? "Không thể đọc website.");
+      if (amount === 0) {
+        setLoading("order");
+        await submitOrder(data.metadata);
+        return;
+      }
       setMetadata(data.metadata);
       setCurrentTotalPaid(data.currentTotalPaid ?? 0);
     } catch (caught) {
@@ -106,19 +115,32 @@ export function JoinForm({
 
   const amountToPay = Math.max(0, amount - currentTotalPaid);
 
+  async function submitOrder(metadataToSubmit: SeoMetadata) {
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: metadataToSubmit.canonicalUrl, amount, provinceSlugs }),
+      });
+      const data = (await response.json()) as { order?: PublicOrder; ranking?: ListingRanking | null; error?: string };
+      if (!response.ok || !data.order) throw new Error(data.error ?? "Không thể tạo thanh toán.");
+      if (data.order.status === "PAID") {
+        await onFreeOrderComplete?.();
+        setFreeConfirmation({ ranking: data.ranking ?? null });
+        return;
+      }
+      router.push(`/thanh-toan/${data.order.code}`);
+    } catch (error) {
+      throw error instanceof Error ? error : new Error("Không thể tạo thanh toán.");
+    }
+  }
+
   async function createPayment() {
     if (!metadata || !provinceSlugs.length) return;
     setError("");
     setLoading("order");
     try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url: metadata.canonicalUrl, amount, provinceSlugs }),
-      });
-      const data = (await response.json()) as { order?: PublicOrder; error?: string };
-      if (!response.ok || !data.order) throw new Error(data.error ?? "Không thể tạo thanh toán.");
-      router.push(`/thanh-toan/${data.order.code}`);
+      await submitOrder(metadata);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Không thể tạo thanh toán.");
       setLoading(null);
@@ -229,7 +251,7 @@ export function JoinForm({
             )}
           </div>
           <button type="submit" className="outbid-button" disabled={loading !== null || !url.trim() || !provinceSlugs.length}>
-            {loading === "preview" ? <LoaderCircle className="spin" size={18} /> : "Đặt hạng"}
+            {loading !== null ? <LoaderCircle className="spin" size={18} /> : "Đặt hạng"}
           </button>
         </form>
         <p className="returning-note" id="province-help">Chọn một hoặc nhiều tỉnh/thành phố nơi cửa hàng hoạt động. Đã có trên bảng? Nhập lại đúng URL để cộng thêm ngân sách và tăng hạng ở mọi khu vực đã chọn.</p>
@@ -237,9 +259,9 @@ export function JoinForm({
         {metadata && (
           <div className="seo-preview">
             <div className="preview-brand">
-              {metadata.imageUrl ? (
+              {metadata.faviconUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={metadata.imageUrl} alt="" />
+                <img src={metadata.faviconUrl} alt="" />
               ) : (
                 <span>{metadata.title.slice(0, 1).toUpperCase()}</span>
               )}
@@ -250,20 +272,29 @@ export function JoinForm({
               <p>{metadata.description || "Website chưa cung cấp meta description."}</p>
               <span className="preview-domain">{metadata.domain}</span>
             </div>
-            <button
-              type="button"
-              className="payment-button"
-              onClick={createPayment}
-              disabled={loading !== null || amount < minimumBid || amountToPay <= 0 || !provinceSlugs.length}
-            >
-              {loading === "order" ? <LoaderCircle className="spin" size={18} /> : <>Thanh toán thêm {formatMoney(amountToPay)} <ArrowRight size={17} /></>}
-            </button>
+            {amountToPay > 0 && (
+              <button
+                type="button"
+                className="payment-button"
+                onClick={createPayment}
+                disabled={loading !== null || amount < minimumBid || !provinceSlugs.length}
+              >
+                {loading === "order" ? <LoaderCircle className="spin" size={18} /> : <>Thanh toán thêm {formatMoney(amountToPay)} <ArrowRight size={17} /></>}
+              </button>
+            )}
           </div>
         )}
 
         {error && <p className="form-error" role="alert">{error}</p>}
       </div>
-      <div className="secure-note"><ShieldCheck size={14} /> Chuyển khoản an toàn qua SePay · tự động lên hạng sau khi xác nhận</div>
+      <div className="secure-note"><ShieldCheck size={14} /> {minimumBid === 0 ? "Đặt hạng 0đ lên bảng ngay · các mức khác xác nhận qua SePay" : "Chuyển khoản an toàn qua SePay · tự động lên hạng sau khi xác nhận"}</div>
+      {freeConfirmation && (
+        <RankCelebration
+          ranking={freeConfirmation.ranking}
+          eyebrow="ĐẶT HẠNG THÀNH CÔNG"
+          onClose={() => setFreeConfirmation(null)}
+        />
+      )}
     </section>
   );
 }

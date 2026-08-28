@@ -262,7 +262,7 @@ button { cursor: pointer; }
   font-weight: 800;
 }
 .preview-brand { width: 48px; height: 48px; border-radius: 11px; }
-.preview-brand img, .listing-logo img { width: 100%; height: 100%; object-fit: cover; }
+.preview-brand img { width: 100%; height: 100%; object-fit: contain; }
 .preview-info { min-width: 0; }
 .preview-kicker { display: block; color: var(--accent) !important; font-size: 8px !important; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .preview-info strong { overflow: hidden; display: block; margin-top: 2px; font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
@@ -334,8 +334,11 @@ button { cursor: pointer; }
   grid-template-columns: minmax(0, 1fr) 165px;
   align-items: center;
   gap: 11px;
-  padding: 14px 10px;
-  border-bottom: 1px solid var(--line);
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
 }
 .province-picker { position: relative; min-width: 0; }
 .province-picker-trigger {
@@ -407,9 +410,9 @@ button { cursor: pointer; }
 .listing-link {
   min-width: 0;
   display: grid;
-  grid-template-columns: 42px 52px minmax(0, 1fr);
+  grid-template-columns: 76px minmax(0, 1fr);
   align-items: center;
-  gap: 11px;
+  gap: 15px;
   color: inherit;
   text-decoration: none;
 }
@@ -418,64 +421,54 @@ button { cursor: pointer; }
 .ranking-card.rank-2,
 .ranking-card.rank-3 {
   min-height: 108px;
-  margin-top: 10px;
-  padding: 14px;
-  border-radius: 16px;
 }
-.rank-number { color: #595752; font-size: 13px; font-weight: 750; text-align: center; }
-.rank-1 .rank-number,
-.rank-2 .rank-number,
-.rank-3 .rank-number {
-  display: grid;
-  place-items: center;
-  font-weight: 850;
-}
+.rank-number { display: grid; place-items: center; width: 37px; height: 31px; border-radius: 10px; color: #595752; background: var(--soft); font-size: 13px; font-weight: 850; text-align: center; }
 .ranking-card.rank-1 {
   border: 2px solid #d9aa35;
   background: linear-gradient(105deg, #fff9e2, #fffefa 60%);
   box-shadow: 0 8px 20px rgba(159,109,13,.12);
 }
-.rank-1 .rank-number { width: 40px; height: 40px; border-radius: 12px; color: #674400; background: linear-gradient(135deg, #fff3aa, #d3991e); box-shadow: 0 4px 10px rgba(159,109,13,.17); }
+.rank-1 .rank-number { color: #674400; background: linear-gradient(135deg, #fff3aa, #d3991e); box-shadow: 0 4px 10px rgba(159,109,13,.17); }
 .rank-1 .listing-logo { border-color: #e4c268; }
 .rank-1 .listing-price { color: #8c5d06; }
 .rank-1 .listing-meta span + span::before { color: #c69521; }
 .rank-1 .claim-rank { border-color: #d8a52e; color: #704b00; background: #fff7d2; }
-.rank-one-link { grid-template-columns: 76px minmax(0, 1fr); gap: 15px; }
-.rank-1 .listing-logo { width: 76px; height: 76px; border-width: 2px; border-radius: 16px; }
 .rank-one-summary { min-width: 170px; height: 76px; justify-content: space-between; }
-.rank-one-summary .listing-price { color: #8c5d06; font-size: 17px; letter-spacing: -.035em; }
+.rank-one-summary .listing-price { font-size: 17px; letter-spacing: -.035em; }
 .rank-one-actions { display: flex; align-items: center; gap: 8px; }
-.rank-one-actions .rank-number { width: 37px; height: 31px; display: grid; place-items: center; border-radius: 10px; color: #674400; background: linear-gradient(135deg, #fff3aa, #d3991e); box-shadow: 0 4px 10px rgba(159,109,13,.17); font-size: 13px; font-weight: 850; }
-.rank-one-actions .claim-rank { padding: 7px 10px; border-color: #d8a52e; border-radius: 9px; color: #704b00; background: #fff7d2; }
+.rank-one-actions .claim-rank { padding: 7px 10px; border-radius: 9px; }
 
 .ranking-card.rank-2 {
   border: 1px solid #c8d7db;
   background: linear-gradient(105deg, #f5fafb, #fffefa 48%);
   box-shadow: 0 5px 13px rgba(82,111,124,.07);
 }
-.rank-2 .rank-number { width: 36px; height: 36px; border-radius: 11px; color: #53666f; background: #e2edef; }
+.rank-2 .rank-number { color: #53666f; background: #e2edef; }
 .rank-2 .listing-logo { border-color: #c8d7db; }
 .rank-2 .listing-price { color: #48636e; }
 .rank-2 .listing-meta span + span::before { color: #78949f; }
 .rank-2 .claim-rank { border-color: #c8d7db; color: #405862; background: #f6fbfc; }
+.rank-2 .rank-one-actions .rank-number { color: #53666f; background: #e2edef; box-shadow: 0 4px 10px rgba(82,111,124,.13); }
+.rank-2 .rank-one-actions .claim-rank { border-color: #c8d7db; color: #405862; background: #f6fbfc; }
 
 .ranking-card.rank-3 {
   border: 1px solid #f0ddd2;
   background: linear-gradient(105deg, #fffaf7, #fffefa 35%);
   box-shadow: 0 3px 9px rgba(130,71,32,.04);
 }
-.rank-3 .rank-number { width: 32px; height: 32px; border-radius: 10px; color: #9c654c; background: #fdf0e8; }
+.rank-3 .rank-number { color: #9c654c; background: #fdf0e8; }
 .rank-3 .listing-logo { border-color: #f0ddd2; }
 .rank-3 .listing-price { color: #9a4b26; }
 .rank-3 .listing-meta span + span::before { color: #b56034; }
 .rank-3 .claim-rank { border-color: #f0ddd2; color: #803d20; background: #fffaf7; }
 .listing-logo {
-  width: 48px;
-  height: 48px;
-  border: 1px solid rgba(32,32,30,.05);
-  border-radius: 12px;
+  width: 76px;
+  height: 76px;
+  border: 2px solid rgba(32,32,30,.05);
+  border-radius: 16px;
   background: white;
 }
+.listing-logo img { display: block; width: 85%; height: 85%; object-fit: contain; }
 .listing-main { min-width: 0; }
 .listing-title-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .listing-title-row h3 {
@@ -719,9 +712,13 @@ body:has(.cookie-banner) .builder-badge { bottom: 184px; }
 .payment-rows { display: grid; gap: 13px; }
 .payment-rows div { display: flex; justify-content: space-between; gap: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--line); font-size: 12px; }
 .payment-rows span { color: var(--muted); }
-.qr-card { padding: 28px; text-align: center; }
+.qr-card { padding: 28px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .qr-card img { width: 100%; max-width: 320px; border-radius: 12px; }
 .qr-placeholder { aspect-ratio: 1; display: grid; place-items: center; border-radius: 14px; color: var(--muted); background: var(--soft); }
+.qr-thanks { width: min(100%, 320px); margin-top: 18px; padding: 15px 12px 0; border-top: 1px dashed #ded7ce; }
+.qr-thanks p { margin: 0; color: #5d5953; font-size: 12px; font-weight: 650; line-height: 1.55; }
+.qr-thanks strong { color: var(--accent-dark); }
+.qr-thanks small { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.45; }
 .payment-status { margin-top: 18px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 9px; border-radius: 10px; color: #735d16; background: #fff3c7; font-size: 12px; font-weight: 750; }
 .payment-status.paid { color: #167a43; background: #e6f8ed; }
 .rank-celebration-backdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(23, 63, 52, .42); backdrop-filter: blur(5px); }
@@ -733,6 +730,8 @@ body:has(.cookie-banner) .builder-badge { bottom: 184px; }
 .rank-celebration h2 { margin: 10px 0; font-size: 28px; letter-spacing: -.045em; }
 .rank-celebration > p:not(.rank-celebration-eyebrow) { margin: 0 auto; color: var(--muted); line-height: 1.6; font-size: 13px; }
 .rank-celebration > p strong { color: var(--accent-dark); }
+.rank-celebration-regions { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.rank-celebration-regions span { padding: 6px 9px; border: 1px solid rgba(238,118,95,.25); border-radius: 999px; color: var(--accent-dark); background: var(--accent-soft); font-size: 10px; font-weight: 800; }
 .rank-celebration-link { display: inline-flex; margin-top: 23px; padding: 11px 17px; border-radius: 999px; color: white; background: var(--ink); font-size: 12px; font-weight: 800; }
 .rank-celebration-link:hover { background: var(--accent-dark); }
 @keyframes celebration-in { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
@@ -745,6 +744,9 @@ body:has(.cookie-banner) .builder-badge { bottom: 184px; }
 .detail-stats > div + div { border-left: 1px solid var(--line); }
 .detail-stats small { display: block; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
 .detail-stats strong { display: block; margin-top: 8px; color: var(--accent); font-size: 25px; }
+.detail-province-ranks { padding: 18px 23px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; border-top: 1px solid var(--line); background: var(--soft); }
+.detail-province-ranks span { padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--card); font-size: 11px; }
+.detail-province-ranks strong { color: var(--accent-dark); }
 .detail-actions { padding: 23px; border-top: 1px solid var(--line); text-align: center; }
 .primary-link { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; color: white; background: var(--accent); font-weight: 750; }
 
@@ -766,30 +768,18 @@ body:has(.cookie-banner) .builder-badge { bottom: 184px; }
   .category-bar { align-items: flex-start; }
   .category-note { display: inline-flex; padding-top: 5px; font-size: 0; }
   .category-note svg { width: 15px; height: 15px; }
-  .ranking-card,
-  .ranking-card.rank-1,
-  .ranking-card.rank-2,
-  .ranking-card.rank-3 {
-    grid-template-columns: 38px 46px 1fr;
-    gap: 9px;
-    padding: 13px 8px;
-  }
-  .listing-link { grid-column: 1 / -1; grid-template-columns: 38px 46px minmax(0, 1fr); gap: 9px; }
-  .ranking-card.rank-1 { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 13px; }
-  .rank-one-link { grid-column: auto; grid-template-columns: 64px minmax(0, 1fr); gap: 11px; }
-  .rank-1 .listing-logo { width: 64px; height: 64px; border-radius: 14px; }
+  .ranking-card { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 13px; }
+  .listing-link { grid-template-columns: 64px minmax(0, 1fr); gap: 11px; }
+  .listing-logo { width: 64px; height: 64px; border-radius: 14px; }
   .rank-one-summary { grid-column: auto; min-width: 126px; height: 64px; }
   .rank-one-summary .listing-price { font-size: 14px; }
   .rank-one-actions { gap: 6px; }
-  .rank-one-actions .rank-number { width: 31px; height: 27px; border-radius: 8px; font-size: 11px; }
+  .rank-number { width: 31px; height: 27px; border-radius: 8px; font-size: 11px; }
   .listing-bid .rank-one-actions .claim-rank { display: inline-flex; padding: 6px 8px; font-size: 9px; }
-  .listing-logo { width: 44px; height: 44px; }
   .listing-title-row h3 { font-size: 12px; }
   .listing-main > p { display: -webkit-box; white-space: normal; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .listing-meta span:nth-child(2) { display: none; }
-  .listing-bid { grid-column: 2 / -1; align-items: center; flex-direction: row; justify-content: space-between; }
   .rank-one-summary { grid-column: auto; align-items: flex-end; flex-direction: column; justify-content: space-between; }
-  .rank-1 .listing-logo { width: 64px; height: 64px; border-radius: 14px; }
   .activity-strip > div { grid-template-columns: 1fr; gap: 9px; }
   .mini-steps { grid-template-columns: 1fr; }
   .mini-steps > div + div { border-top: 1px solid var(--line); border-left: 0; }
@@ -810,18 +800,12 @@ body:has(.cookie-banner) .builder-badge { bottom: 184px; }
   .live-stats { flex-wrap: wrap; justify-content: center; }
   .claim-heading h1 { font-size: 30px; }
   .amount-stepper input { font-size: 34px; }
-  .ranking-card,
-  .ranking-card.rank-1,
-  .ranking-card.rank-2,
-  .ranking-card.rank-3 { grid-template-columns: 34px 42px 1fr; }
-  .listing-link { grid-template-columns: 34px 42px minmax(0, 1fr); }
-  .listing-logo { width: 40px; height: 40px; border-radius: 10px; }
+  .ranking-card { grid-template-columns: minmax(0, 1fr) auto; }
+  .listing-link { grid-template-columns: 58px minmax(0, 1fr); gap: 9px; }
+  .listing-logo { width: 58px; height: 58px; border-radius: 13px; }
   .listing-price { font-size: 10px; }
   .listing-meta { gap: 5px; }
   .listing-bid > a:first-child { display: none; }
-  .ranking-card.rank-1 { grid-template-columns: minmax(0, 1fr) auto; }
-  .rank-one-link { grid-template-columns: 58px minmax(0, 1fr); gap: 9px; }
-  .rank-1 .listing-logo { width: 58px; height: 58px; border-radius: 13px; }
   .rank-one-summary { grid-column: auto; min-width: 118px; height: 58px; align-items: flex-end; flex-direction: column; justify-content: space-between; }
   .rank-one-summary .listing-price { font-size: 12px; }
   .listing-bid .rank-one-actions .claim-rank { display: inline-flex; }

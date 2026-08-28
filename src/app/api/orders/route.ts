@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appConfig, isDatabaseConfigured } from "@/lib/config";
 import { extractSeoMetadata } from "@/lib/metadata";
-import { createOrder } from "@/lib/repository";
+import { createOrder, getListingRanking } from "@/lib/repository";
 import { isProvinceSlug } from "@/lib/vn-provinces";
 
 export const runtime = "nodejs";
@@ -28,7 +28,10 @@ export async function POST(request: Request) {
     const input = inputSchema.parse(await request.json());
     const metadata = await extractSeoMetadata(input.url);
     const order = await createOrder(metadata, input.amount, input.provinceSlugs);
-    return NextResponse.json({ order }, { status: 201 });
+    const ranking = order.status === "PAID"
+      ? await getListingRanking(order.metadata.canonicalUrl)
+      : null;
+    return NextResponse.json({ order, ranking }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Không thể tạo đơn hàng.";
     return NextResponse.json({ error: message }, { status: 400 });

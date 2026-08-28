@@ -4,33 +4,29 @@ import { getDb } from "@/db";
 import { categories, clickRateLimits, listingProvinces, listings, listingClickGuards, orders, payments, siteStats, visitors } from "@/db/schema";
 import { appConfig } from "./config";
 import { buildSepayQrUrl } from "./sepay";
-import type { LeaderboardEntry, OrderMetadata, PublicOrder, PublicStats, SeoMetadata } from "./types";
-
-type ListingWithProvince = {
-  listing: typeof listings.$inferSelect;
-  province: { id: string; slug: string; name: string };
-};
+import type { LeaderboardEntry, ListingRanking, OrderMetadata, ProvinceRanking, PublicOrder, PublicStats, SeoMetadata } from "./types";
 
 function listingToPublic(
-  row: ListingWithProvince,
-  rank: number,
+  listing: typeof listings.$inferSelect,
+  globalRank: number,
+  provinces: ProvinceRanking[],
 ): LeaderboardEntry {
   return {
-    id: row.listing.id,
-    rank,
-    slug: row.listing.slug,
-    originalUrl: row.listing.originalUrl,
-    canonicalUrl: row.listing.canonicalUrl,
-    domain: row.listing.domain,
-    title: row.listing.title,
-    description: row.listing.description,
-    imageUrl: row.listing.imageUrl,
-    faviconUrl: row.listing.faviconUrl,
-    totalPaid: row.listing.totalPaid,
-    clickCount: row.listing.clickCount,
-    firstPaidAt: row.listing.firstPaidAt.toISOString(),
-    lastPaidAt: row.listing.lastPaidAt.toISOString(),
-    province: row.province,
+    id: listing.id,
+    globalRank,
+    provinces,
+    slug: listing.slug,
+    originalUrl: listing.originalUrl,
+    canonicalUrl: listing.canonicalUrl,
+    domain: listing.domain,
+    title: listing.title,
+    description: listing.description,
+    imageUrl: listing.imageUrl,
+    faviconUrl: listing.faviconUrl,
+    totalPaid: listing.totalPaid,
+    clickCount: listing.clickCount,
+    firstPaidAt: listing.firstPaidAt.toISOString(),
+    lastPaidAt: listing.lastPaidAt.toISOString(),
   };
 }
 
@@ -54,7 +50,7 @@ function slugFor(metadata: SeoMetadata) {
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-|-$/g, "")
     .toLowerCase();
-  const suffix = createHash("sha1").update(metadata.domain).digest("hex").slice(0, 7);
+  const suffix = createHash("sha1").update(metadata.canonicalUrl).digest("hex").slice(0, 7);
   return `${base || "kinh-mat"}-${suffix}`;
 }
 
@@ -68,13 +64,26 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
     .innerJoin(listingProvinces, eq(listingProvinces.listingId, listings.id))
     .innerJoin(categories, eq(listingProvinces.provinceCategoryId, categories.id))
     .where(eq(listings.status, "ACTIVE"))
-    .orderBy(asc(categories.sortOrder), desc(listings.totalPaid), asc(listings.firstPaidAt));
-  const ranksByProvince = new Map<string, number>();
-  return rows.map((row) => {
-    const rank = (ranksByProvince.get(row.province.id) ?? 0) + 1;
-    ranksByProvince.set(row.province.id, rank);
-    return listingToPublic(row, rank);
-  });
+    .orderBy(desc(listings.totalPaid), asc(listings.createdAt), asc(listings.id), asc(categories.sortOrder));
+
+  const provinceRanks = new Map<string, number>();
+  const grouped = new Map<string, { listing: typeof listings.$inferSelect; provinces: ProvinceRanking[] }>();
+
+  for (const row of rows) {
+    const rank = (provinceRanks.get(row.province.id) ?? 0) + 1;
+    provinceRanks.set(row.province.id, rank);
+    const current = grouped.get(row.listing.id);
+    const province = { ...row.province, rank };
+    if (current) {
+      current.provinces.push(province);
+    } else {
+      grouped.set(row.listing.id, { listing: row.listing, provinces: [province] });
+    }
+  }
+
+  return Array.from(grouped.values()).map(({ listing, provinces }, index) =>
+    listingToPublic(listing, index + 1, provinces),
+  );
 }
 
 export async function getListing(slug: string) {
@@ -100,18 +109,19 @@ export async function getPublicStats(): Promise<PublicStats> {
     : { totalVisitors: 0, totalPageviews: 0, totalOutboundClicks: 0, totalRevenue: 0 };
 }
 
-export async function getListingTotalPaid(domain: string) {
+export async function getListingTotalPaid(canonicalUrl: string) {
   const [listing] = await getDb()
     .select({ totalPaid: listings.totalPaid })
     .from(listings)
-    .where(eq(listings.domain, domain))
+    .where(eq(listings.canonicalUrl, canonicalUrl))
     .limit(1);
   return listing?.totalPaid ?? 0;
 }
 
-export async function getListingRank(domain: string, provinceSlug?: string) {
+export async function getListingRanking(canonicalUrl: string): Promise<ListingRanking | null> {
   const leaderboard = await getLeaderboard();
-  return leaderboard.find((listing) => listing.domain === domain && (!provinceSlug || listing.province.slug === provinceSlug))?.rank ?? null;
+  const listing = leaderboard.find((item) => item.canonicalUrl === canonicalUrl);
+  return listing ? { globalRank: listing.globalRank, provinces: listing.provinces } : null;
 }
 
 // `targetTotal` is the desired total on the leaderboard. Returning listings
@@ -120,9 +130,9 @@ export async function createOrder(metadata: SeoMetadata, targetTotal: number, pr
   const orderCode = `${appConfig.paymentPrefix}${randomBytes(4).toString("hex").toUpperCase()}`;
   const expiresAt = new Date(Date.now() + appConfig.orderExpiryMinutes * 60_000);
   const db = getDb();
-  const currentTotal = await getListingTotalPaid(metadata.domain);
+  const currentTotal = await getListingTotalPaid(metadata.canonicalUrl);
   const amountToPay = targetTotal - currentTotal;
-  if (amountToPay <= 0) {
+  if (amountToPay < 0) {
     throw new Error("Mức đặt hạng phải cao hơn tổng tiền hiện tại của website.");
   }
   const uniqueProvinceSlugs = [...new Set(provinceSlugs)];
@@ -136,6 +146,61 @@ export async function createOrder(metadata: SeoMetadata, targetTotal: number, pr
     ...metadata,
     provinces: uniqueProvinceSlugs.map((slug) => provincesBySlug.get(slug)!),
   };
+
+  // A zero-price listing is confirmed immediately. Keeping the order and the
+  // listing update in one transaction prevents an order from being marked paid
+  // without actually appearing on the leaderboard.
+  if (targetTotal === 0) {
+    const activatedAt = new Date();
+    return db.transaction(async (tx) => {
+      const [row] = await tx.insert(orders).values({
+        orderCode,
+        canonicalUrl: metadata.canonicalUrl,
+        expectedAmount: 0,
+        status: "PAID",
+        metadata: orderMetadata,
+        expiresAt,
+        paidAt: activatedAt,
+      }).returning();
+
+      const [listing] = await tx
+        .insert(listings)
+        .values({
+          canonicalUrl: metadata.canonicalUrl,
+          originalUrl: metadata.originalUrl,
+          slug: slugFor(metadata),
+          domain: metadata.domain,
+          title: metadata.title,
+          description: metadata.description,
+          imageUrl: metadata.imageUrl,
+          faviconUrl: metadata.faviconUrl,
+          provinceCategoryId: orderMetadata.provinces[0].id,
+          totalPaid: 0,
+          firstPaidAt: activatedAt,
+          lastPaidAt: activatedAt,
+        })
+        .onConflictDoUpdate({
+          target: listings.canonicalUrl,
+          set: { status: "ACTIVE", updatedAt: activatedAt },
+        })
+        .returning({ id: listings.id });
+
+      await tx
+        .insert(listingProvinces)
+        .values(orderMetadata.provinces.map((province) => ({
+          listingId: listing.id,
+          provinceCategoryId: province.id,
+        })))
+        .onConflictDoNothing();
+
+      return orderToPublic(row);
+    });
+  }
+
+  if (amountToPay === 0) {
+    throw new Error("Mức đặt hạng phải cao hơn tổng tiền hiện tại của website.");
+  }
+
   const [row] = await db.insert(orders).values({
     orderCode,
     canonicalUrl: metadata.canonicalUrl,
@@ -224,7 +289,7 @@ export async function processPayment(input: ProcessPaymentInput) {
         lastPaidAt: input.paidAt,
       })
       .onConflictDoUpdate({
-        target: listings.domain,
+        target: listings.canonicalUrl,
         set: {
           totalPaid: sql`${listings.totalPaid} + ${input.amount}`,
           lastPaidAt: input.paidAt,

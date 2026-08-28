@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   alternates: { canonical: "/" },
   icons: {
-    icon: "/optirise-logo.png",
+    icon: { url: "/optirise-logo.png", sizes: "48x48", type: "image/png" },
     apple: "/optirise-logo.png",
   },
   openGraph: {

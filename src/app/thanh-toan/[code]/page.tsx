@@ -42,7 +42,10 @@ export default async function PaymentPage({ params }: { params: Promise<{ code: 
           ) : (
             <div className="qr-placeholder"><div><Copy size={30} /><p>Cấu hình tài khoản SePay để hiển thị QR.</p></div></div>
           )}
-          <p>Cảm ơn bạn đã đồng hành cùng Kính Mắt Leaderboard.</p>
+          <div className="qr-thanks">
+            <p>Cảm ơn bạn đã đồng hành cùng <strong>OptiRise</strong>.</p>
+            <small>Giao dịch sẽ được xác nhận tự động.</small>
+          </div>
         </aside>
       </div>
     </main>

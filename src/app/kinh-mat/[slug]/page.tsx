@@ -40,9 +40,12 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
           <p>{listing.description || "Website chưa cung cấp mô tả."}</p>
         </div>
         <div className="detail-stats">
-          <div><Trophy size={20} /><small>THỨ HẠNG</small><strong>#{listing.rank}</strong></div>
+          <div><Trophy size={20} /><small>HẠNG TOÀN QUỐC</small><strong>#{listing.globalRank}</strong></div>
           <div><small>TỔNG ĐÃ TRẢ</small><strong>{formatMoney(listing.totalPaid)}</strong></div>
           <div><MousePointerClick size={20} /><small>LƯỢT CLICK</small><strong>{listing.clickCount.toLocaleString("vi-VN")}</strong></div>
+        </div>
+        <div className="detail-province-ranks" aria-label="Thứ hạng theo tỉnh thành">
+          {listing.provinces.map((province) => <span key={province.id}><strong>#{province.rank}</strong> {province.name}</span>)}
         </div>
         <div className="detail-actions">
           <a href={`/go/${listing.slug}`} className="primary-link" target="_blank" rel="sponsored noopener">
