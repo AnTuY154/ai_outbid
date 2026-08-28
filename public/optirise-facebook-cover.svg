@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="312" viewBox="0 0 820 312" role="img" aria-labelledby="title description">
+  <title id="title">OptiRise — Khám phá các shop kính đang làm tốt</title>
+  <desc id="description">Ảnh bìa Facebook của OptiRise, một nền tảng khám phá và so sánh website các shop kính trên toàn quốc.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#2b2317" flood-opacity=".08"/>
+    </filter>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#fff3aa"/><stop offset="1" stop-color="#d3991e"/></linearGradient>
+  </defs>
+
+  <rect width="820" height="312" fill="#fdfcf9"/>
+  <circle cx="94" cy="286" r="202" fill="#fff0eb" opacity=".55"/>
+  <circle cx="776" cy="71" r="124" fill="#f5f2ed" opacity=".72"/>
+  <path d="M0 279C116 248 152 323 287 293" fill="none" stroke="#173f34" stroke-opacity=".14" stroke-width="1.25"/>
+  <path d="M574 48c95-30 150 11 246-12" fill="none" stroke="#ee765f" stroke-opacity=".22" stroke-width="1.25"/>
+
+  <rect x="0" y="0" width="820" height="55" fill="#fffefa"/>
+  <path d="M0 54.5h820" stroke="#e5e1da"/>
+  <g transform="translate(48 15)">
+    <g transform="scale(.057)">
+      <path d="M10 180C10 80 160 35 305 46c142 10 276 55 283 139-7 106-112 157-286 161C147 348 26 305 10 180Z" fill="none" stroke="#173f34" stroke-width="38" stroke-linejoin="round"/>
+      <path d="M178 201a125 125 0 0 1 250 0" fill="#ee765f"/>
+      <path d="M93 291c123-92 252-104 421-37-76 71-224 113-367 62Z" fill="#173f34"/>
+      <path d="M155 307c90-65 194-93 317-67" fill="none" stroke="#fdfcf9" stroke-width="22"/>
+    </g>
+    <text x="42" y="19" fill="#20201e" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="-.7">Opti<tspan fill="#ee765f">Rise</tspan></text>
+  </g>
+  <g font-family="Inter, Arial, sans-serif" font-size="10" font-weight="650" fill="#56544f">
+    <text x="548" y="33">Xếp hạng</text><text x="618" y="33">Khám phá</text>
+    <rect x="692" y="18" width="84" height="23" rx="11.5" fill="#fff0eb"/>
+    <text x="705" y="33" fill="#d85f4b" font-size="9.5" font-weight="800">Tham gia ↗</text>
+  </g>
+
+  <g transform="translate(62 88)" font-family="Inter, Arial, sans-serif">
+    <rect x="0" y="0" width="104" height="23" rx="11.5" fill="#fff0eb"/>
+    <circle cx="14" cy="11.5" r="4" fill="#ee765f"/>
+    <text x="24" y="15.2" fill="#9f3d2f" font-size="9.5" font-weight="800">KHÁM PHÁ SHOP KÍNH</text>
+    <text x="0" y="69" fill="#20201e" font-size="32" font-weight="800" letter-spacing="-1.65">Tìm chiếc kính phù hợp,</text>
+    <text x="0" y="103" fill="#ee765f" font-size="32" font-weight="800" letter-spacing="-1.65">từ những shop làm tốt.</text>
+    <text x="1" y="131" fill="#77756f" font-size="12.2">So sánh nhà bán lẻ kính trên toàn quốc và</text>
+    <text x="1" y="149" fill="#77756f" font-size="12.2">truy cập trực tiếp website chính thức của họ.</text>
+    <rect x="0" y="169" width="151" height="32" rx="16" fill="#20201e"/>
+    <text x="17" y="189.8" fill="#fff" font-size="10.5" font-weight="800">Khám phá cửa hàng</text>
+    <circle cx="132" cy="185" r="9" fill="#ee765f"/>
+    <path d="M128.7 188.3l6.4-6.4m-4.8 0h4.8v4.8" fill="none" stroke="#fff" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g transform="translate(512 85)" font-family="Inter, Arial, sans-serif" filter="url(#shadow)">
+    <rect x="0" y="0" width="258" height="164" rx="17" fill="#fffefa" stroke="#e5e1da"/>
+    <text x="17" y="22" fill="#77756f" font-size="9.5" font-weight="800" letter-spacing=".75">ĐANG DẪN ĐẦU</text>
+    <g transform="translate(12 34)">
+      <rect width="234" height="40" rx="9" fill="#fff9e2" stroke="#d9aa35"/>
+      <rect x="8" y="7" width="26" height="26" rx="8" fill="#fff" stroke="#e4c268"/>
+      <image href="mat-viet.svg" x="10" y="9" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
+      <text x="42" y="19" fill="#20201e" font-size="10.5" font-weight="800">Kính Mắt Việt</text>
+      <text x="42" y="30" fill="#8c5d06" font-size="8.5">kinhmateyewear.com · Hà Nội</text>
+    </g>
+    <g transform="translate(12 80)">
+      <rect width="234" height="31" rx="9" fill="#f5fafb" stroke="#c8d7db"/>
+      <rect x="8" y="6" width="20" height="20" rx="6" fill="#e2edef"/>
+      <text x="11" y="20" fill="#53666f" font-size="8.5" font-weight="850">#2</text>
+      <text x="39" y="14" fill="#20201e" font-size="9.5" font-weight="800">Optic House</text>
+      <text x="39" y="24" fill="#77756f" font-size="8">Hà Nội · website chính thức</text>
+      <text x="188" y="19" fill="#48636e" font-size="8.5" font-weight="800">Mở web ↗</text>
+    </g>
+    <g transform="translate(12 117)">
+      <rect width="234" height="31" rx="9" fill="#fffaf7" stroke="#f0ddd2"/>
+      <rect x="8" y="6" width="20" height="20" rx="6" fill="#fdf0e8"/>
+      <text x="11" y="20" fill="#9c654c" font-size="8.5" font-weight="850">#3</text>
+      <text x="39" y="14" fill="#20201e" font-size="9.5" font-weight="800">Vision Studio</text>
+      <text x="39" y="24" fill="#77756f" font-size="8">Đà Nẵng · website chính thức</text>
+      <text x="188" y="19" fill="#9a4b26" font-size="8.5" font-weight="800">Mở web ↗</text>
+    </g>
+  </g>
+  <text x="611" y="276" fill="#77756f" font-family="Inter, Arial, sans-serif" font-size="9.5">Công khai · dễ so sánh · cập nhật realtime</text>
+</svg>

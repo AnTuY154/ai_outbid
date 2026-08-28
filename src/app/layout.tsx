@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Glasses } from "lucide-react";
 import { CookieConsentBanner } from "@/components/cookie-consent";
 import { HeaderLiveStats } from "@/components/header-live-stats";
 import "./globals.css";
@@ -13,6 +12,10 @@ export const metadata: Metadata = {
   description: "Khám phá các cửa hàng kính mắt và nhà bán lẻ kính trên toàn quốc. So sánh lựa chọn và truy cập trực tiếp website chính thức của từng nhà bán.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   alternates: { canonical: "/" },
+  icons: {
+    icon: "/optirise-logo.png",
+    apple: "/optirise-logo.png",
+  },
   openGraph: {
     title: "OptiRise | Cửa hàng kính mắt trên toàn quốc",
     description: "Khám phá các nhà bán lẻ kính đang hoạt động trên toàn quốc.",
@@ -30,7 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <header className="site-header">
           <div className="board-shell header-inner">
             <Link href="/" className="brand" aria-label="OptiRise - Trang chủ">
-              <span className="brand-mark" aria-hidden="true"><Glasses size={21} strokeWidth={2.6} /></span>
+              <span className="brand-mark" aria-hidden="true"><img src="/optirise-logo.png" alt="" /></span>
               <span>Opti<span className="brand-dot">Rise</span></span>
             </Link>
             <HeaderLiveStats />

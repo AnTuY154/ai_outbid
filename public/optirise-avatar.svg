@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">OptiRise</title>
+  <rect width="512" height="512" rx="108" fill="#fdfcf9"/>
+  <circle cx="84" cy="92" r="145" fill="#fff0eb" opacity=".85"/>
+  <circle cx="443" cy="452" r="138" fill="#f5f2ed" opacity=".9"/>
+  <path d="M-12 408c100-57 189 35 300-26" fill="none" stroke="#173f34" stroke-opacity=".13" stroke-width="3"/>
+  <g transform="translate(85 88)">
+    <path d="M3 111C3 40 111 9 213 17c101 7 197 39 202 98-5 75-81 111-204 114C100 231 15 202 3 111Z" fill="none" stroke="#173f34" stroke-width="26" stroke-linejoin="round"/>
+    <path d="M130 134a84 84 0 0 1 168 0" fill="#ee765f"/>
+    <path d="M61 195c83-62 171-70 283-25-51 50-151 78-247 43Z" fill="#173f34"/>
+    <path d="M103 204c61-44 131-63 214-45" fill="none" stroke="#fdfcf9" stroke-width="15"/>
+  </g>
+  <text x="256" y="390" text-anchor="middle" fill="#20201e" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="800" letter-spacing="-2.5">Opti<tspan fill="#ee765f">Rise</tspan></text>
+  <text x="256" y="420" text-anchor="middle" fill="#77756f" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.2">KHÁM PHÁ SHOP KÍNH</text>
+</svg>
