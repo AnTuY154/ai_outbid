@@ -213,7 +213,10 @@ button { cursor: pointer; }
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 13px;
+  /* iOS Safari zooms a focused input whose effective font size is below 16px. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  font-size: 16px;
 }
 .outbid-button {
   min-width: 118px;
@@ -353,7 +356,7 @@ button { cursor: pointer; }
   color: #55514b;
   background: white;
   font: inherit;
-  font-size: 12px;
+  font-size: 16px;
   text-align: left;
   cursor: pointer;
   transition: border-color .2s, box-shadow .2s;
@@ -386,7 +389,7 @@ button { cursor: pointer; }
   border-bottom: 1px solid #eee8e1;
   color: var(--accent);
 }
-.province-search input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: #383633; font: inherit; font-size: 12px; }
+.province-search input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: #383633; font: inherit; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; font-size: 16px; }
 .province-options { max-height: 248px; padding: 5px 0 1px; overflow-y: auto; scrollbar-width: thin; }
 .province-options button {
   width: 100%;
@@ -714,6 +717,9 @@ body:has(.cookie-banner) .builder-badge { bottom: 184px; }
 .payment-rows span { color: var(--muted); }
 .qr-card { padding: 28px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .qr-card img { width: 100%; max-width: 320px; border-radius: 12px; }
+.download-qr { width: min(100%, 320px); margin-top: 14px; padding: 11px 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; color: white; background: var(--ink); font-size: 12px; font-weight: 800; }
+.download-qr:hover { background: var(--accent-dark); }
+.download-qr-hint { width: min(100%, 320px); margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.45; }
 .qr-placeholder { aspect-ratio: 1; display: grid; place-items: center; border-radius: 14px; color: var(--muted); background: var(--soft); }
 .qr-thanks { width: min(100%, 320px); margin-top: 18px; padding: 15px 12px 0; border-top: 1px dashed #ded7ce; }
 .qr-thanks p { margin: 0; color: #5d5953; font-size: 12px; font-weight: 650; line-height: 1.55; }

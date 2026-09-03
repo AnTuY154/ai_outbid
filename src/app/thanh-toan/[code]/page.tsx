@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Copy, ScanLine } from "lucide-react";
+import { Copy, Download, ScanLine } from "lucide-react";
 import { getOrder } from "@/lib/repository";
 import { formatMoney } from "@/lib/format";
 import { PaymentStatus } from "@/components/payment-status";
@@ -37,8 +37,14 @@ export default async function PaymentPage({ params }: { params: Promise<{ code: 
         </section>
         <aside className="qr-card">
           {order.qrUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={order.qrUrl} alt={`QR thanh toán đơn ${order.code}`} />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={order.qrUrl} alt={`QR thanh toán đơn ${order.code}`} />
+              <a className="download-qr" href={`/api/orders/${order.code}/qr`} download={`qr-thanh-toan-${order.code}.png`}>
+                <Download size={16} /> Lưu ảnh QR
+              </a>
+              <small className="download-qr-hint">Trên iPhone/iPad, nếu ảnh mở ra, chọn Chia sẻ rồi “Lưu hình ảnh”.</small>
+            </>
           ) : (
             <div className="qr-placeholder"><div><Copy size={30} /><p>Cấu hình tài khoản SePay để hiển thị QR.</p></div></div>
           )}
