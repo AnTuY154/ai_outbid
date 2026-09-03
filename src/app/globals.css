@@ -717,9 +717,12 @@ body:has(.cookie-banner) .builder-badge { bottom: 184px; }
 .payment-rows span { color: var(--muted); }
 .qr-card { padding: 28px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .qr-card img { width: 100%; max-width: 320px; border-radius: 12px; }
-.download-qr { width: min(100%, 320px); margin-top: 14px; padding: 11px 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; color: white; background: var(--ink); font-size: 12px; font-weight: 800; }
+.qr-save-action { width: min(100%, 320px); margin-top: 14px; }
+.download-qr { width: 100%; padding: 11px 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; color: white; background: var(--ink); font-size: 12px; font-weight: 800; }
 .download-qr:hover { background: var(--accent-dark); }
 .download-qr-hint { width: min(100%, 320px); margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.download-qr:disabled { cursor: wait; opacity: .68; }
+.qr-download-fallback { margin-top: 8px; display: inline-flex; align-items: center; gap: 5px; border: 0; color: var(--accent-dark); background: transparent; font-size: 11px; font-weight: 750; text-decoration: underline; text-underline-offset: 2px; }
 .qr-placeholder { aspect-ratio: 1; display: grid; place-items: center; border-radius: 14px; color: var(--muted); background: var(--soft); }
 .qr-thanks { width: min(100%, 320px); margin-top: 18px; padding: 15px 12px 0; border-top: 1px dashed #ded7ce; }
 .qr-thanks p { margin: 0; color: #5d5953; font-size: 12px; font-weight: 650; line-height: 1.55; }
