@@ -146,7 +146,9 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
       <JoinForm
         key={prefill?.revision ?? "default"}
         minimumBid={minimumBid}
-        suggestedBid={Math.max(minimumBid, (scopedLeaderboard[0]?.item.totalPaid ?? 0) + 10_000)}
+        suggestedBid={scopedLeaderboard[0]
+          ? scopedLeaderboard[0].item.totalPaid + minimumBid
+          : minimumBid}
         prefill={prefill}
         onFreeOrderComplete={fetchPublicData}
       />
@@ -229,7 +231,7 @@ export function RealtimeBoard({ initialLeaderboard, initialStats, minimumBid }: 
                       event.stopPropagation();
                       setPrefill((current) => ({
                         url: item.canonicalUrl,
-                        targetAmount: item.totalPaid + 10_000,
+                        targetAmount: item.totalPaid + minimumBid,
                         provinceSlug: selectedProvinceSlug ?? item.provinces[0]?.slug,
                         revision: (current?.revision ?? 0) + 1,
                       }));
